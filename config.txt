@@ -1,0 +1,24 @@
+# === mandatory ===
+WIDTH=30
+HEIGHT=24
+# both should be positive
+
+ENTRY=1,14
+EXIT=23,26
+# both should be in the form 'h,w' (no spaces) for 0<=h<HEIGHT and 0<=w<WIDTH
+
+OUTPUT_FILE=maze.txt
+# filename should be nonempty
+
+
+
+# === optional ===
+
+PERFECT=1
+# only possible: 'yes/no, Yes/No, True/False, true/false, 1/0'
+
+ALGORITHM=dfs
+# only possible: 'prim', 'dfs', 'kruskal', 'hunt_and_kill'
+
+SEED=42
+# should be possible
