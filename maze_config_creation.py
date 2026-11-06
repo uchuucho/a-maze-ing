@@ -25,7 +25,7 @@ def _to_int(key: str, value: str) -> int:
     except ValueError:
         raise ConfigError(f"{key}: '{value}' is not an integer") from None
 
-def _to_bool(key: str, value: bool) -> bool:
+def _to_bool(key: str, value: str) -> bool:
     if value in ("yes", "Yes", "true", "True", "1"):
         return True
     if value in ("no", "No", "false", "False", "0"):
@@ -139,7 +139,7 @@ class Maze:
         
         # 2d grid: W (west), S (south), E (east), N (north) all in 0 or 1
         self.array: list[list[int]] = [
-            [0b0000 for _ in range(config.width)]
+            [0b1111 for _ in range(config.width)]
             for _ in range(config.height)
         ]
 
@@ -147,7 +147,7 @@ class Maze:
         # self.array[config.entry[0]][config.entry[1]] = 0b10001
         # self.array[config.exit[0]][config.exit[1]] = 0b10010
 
-        # locating 42 symbol (f)
+        # locating 42 symbol (0b10000)
         if config.perfect:
             if config.width < 8 or config.height < 6:
                 return None
@@ -166,7 +166,7 @@ class Maze:
             if (ih, iw) == (0, 0):
                 return None
             for (i, j) in _PFOUR | _PTWO:
-                self.array[ih + i][iw + j] = 0b1111
+                self.array[ih + i][iw + j] = 0b10000
         else:
             if config.width < 8 or config.height < 8:
                 return None
@@ -185,11 +185,11 @@ class Maze:
             if (ih, iw) == (0, 0):
                 return None
             for (i, j) in _NDEFOUR | _NDETWO:
-                self.array[ih + i][iw + j] = 0b1111
+                self.array[ih + i][iw + j] = 0b10000
 
     # printing maze
     def __print_maze__(self) -> None:
         for i in range(self.config.height):
             for j in range(self.config.width):
-                print("0123456789abcdef"[self.array[i][j]], end="")
+                print("0123456789abcde*#"[self.array[i][j]], end="")
             print()
