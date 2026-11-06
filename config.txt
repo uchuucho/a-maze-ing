@@ -14,7 +14,7 @@ OUTPUT_FILE=maze.txt
 
 # === optional ===
 
-PERFECT=1
+PERFECT=No
 # only possible: 'yes/no, Yes/No, True/False, true/false, 1/0'
 
 ALGORITHM=dfs
