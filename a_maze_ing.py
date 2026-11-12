@@ -5,10 +5,10 @@ import sys
 import time
 
 
-BG    = (10, 50, 60)        # cell background
-PATH  = (255, 240, 200)     # shortest path
+BG = (10, 50, 60)        # cell background
+PATH = (255, 240, 200)     # shortest path
 START = (235, 7, 7)     # entry 
-END   = (15, 28, 209)     # exit
+END = (10, 140, 12)     # exit
 WALL = (224, 163, 78)       # wall
 S42 = (52, 55, 235)
 
@@ -69,7 +69,6 @@ def agenda() -> None:
         sys.stdout.write(f"\r{f"\x1b[48;2;{r};{g};{b}m \x1b[0m"} {key}")
         sys.stdout.write("\n")
     sys.stdout.flush()
-
 
 
 if __name__ == "__main__":
