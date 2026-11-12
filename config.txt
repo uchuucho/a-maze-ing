@@ -1,10 +1,10 @@
 # === mandatory ===
-WIDTH=30
-HEIGHT=24
+WIDTH=12
+HEIGHT=12
 # both should be positive
 
-ENTRY=1,14
-EXIT=23,26
+ENTRY=0,0
+EXIT=11,11
 # both should be in the form 'h,w' (no spaces) for 0<=h<HEIGHT and 0<=w<WIDTH
 
 OUTPUT_FILE=maze.txt
@@ -14,7 +14,7 @@ OUTPUT_FILE=maze.txt
 
 # === optional ===
 
-PERFECT=No
+PERFECT=yes
 # only possible: 'yes/no, Yes/No, True/False, true/false, 1/0'
 
 ALGORITHM=dfs
@@ -22,3 +22,6 @@ ALGORITHM=dfs
 
 SEED=42
 # should be possible
+
+CELL=4
+# size of each cell is CELLxCELL pixels

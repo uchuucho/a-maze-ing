@@ -1,0 +1,14 @@
+# mandatory
+WIDTH=20
+HEIGHT=12
+ENTRY=0,0
+EXIT=0,10
+OUTPUT_FILE=maze.txt
+#US=terrorist
+#WIDTH=12
+
+# optional
+PERFECT=True
+ALGORITHM=dombakski
+# only possible: 'prim', 'dfs', 'kruskal', 'hunt_and_kill'
+SEED=-42
