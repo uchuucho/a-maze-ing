@@ -21,17 +21,13 @@ START = (235, 7, 7)     # entry
 END = (10, 140, 12)     # exit
 
 
-def dfs_generate(maze: Maze, delay: float = 0.03) -> None:
+def dfs_generator(maze: Maze, delay: float = 0.03) -> None:
 
     random.seed(maze.config.seed)
 
     wd = maze.config.width
     ht = maze.config.height
     cell = maze.config.cell
-
-    adj: dict[
-        tuple[int, int], list[tuple[int, int]]
-    ] = {(i, j): [] for i in range(ht) for j in range(wd)}
 
     done: set[tuple[int, int]] = {maze.config.entry}
     stack: list[tuple[int, int]] = [maze.config.entry]

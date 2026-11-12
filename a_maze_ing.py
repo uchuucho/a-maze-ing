@@ -1,5 +1,6 @@
 from maze_config_creation import MazeConfig, ConfigError, Maze, Pixel
-from maze_by_dfs import dfs_generate
+from maze_by_dfs import dfs_generator
+from maze_by_prim import prim_generator
 from utils import print_path, explode
 import sys
 import time
@@ -88,10 +89,12 @@ if __name__ == "__main__":
     maze = Maze(cfg)
     maze.add42()
     maze.pixel_init()
-    # maze.__print_maze_map__()
-    # maze.__print_maze_pixel__()
-    
-    
+
+    #prim_generator(maze)
+    #maze.__print_maze_map__()
+    #maze.__print_maze_pixel__()
+    #sys.exit(1)
+
     # preparing printing maze
 
     # raw maze: clean screen
@@ -103,7 +106,9 @@ if __name__ == "__main__":
     sys.stdout.write(rendering(maze))
     sys.stdout.flush()
 
-    dfs_generate(maze, 0.08)
+    #dfs_generator(maze, 0.08)
+    prim_generator(maze, 0.08)
+
 
     sys.stdout.write(f"\x1b[{len(maze.pixels)//2 + 1};1H\x1b[?25h\n")
 
@@ -112,17 +117,18 @@ if __name__ == "__main__":
     n = 0
     while True:
         print()
-        print("\nPress Enter to exit the program")
-        print("\nPress P to print/hide the shortest path")
+        print("\nPress [Enter] to exit the program")
+        print("\nPress [P] or [p] to print the shortest path")
+        print("\nPress [H] or [h] to print the shortest path")
         s = input("\n")
         if len(s) == 0:
             break
-        if s == 'P' or s == 'p':
+        if n == 0 and (s == 'P' or s == 'p'):
             n += 1
-            if n % 2 == 1:
-                print_path(maze, Pixel(PATH, 0b0000), 0.08)
-                explode(maze, maze.config.exit, 100, 600, 0.04)
-            else:
-                print_path(maze, Pixel(BG, 0b0000), 0.00)
+            print_path(maze, Pixel(PATH, 0b0000), 0.08)
+            explode(maze, maze.config.exit, 100, 600, 0.04)
+        if n == 1 and (s == 'H' or s == 'h'):
+            n -= 1
+            print_path(maze, Pixel(BG, 0b0000), 0.00)
         park(maze, 7)
             
