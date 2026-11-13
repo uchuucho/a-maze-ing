@@ -232,7 +232,13 @@ class MazeGenerator:
                     animation_step(cur, nxt)
             in_maze.add(cur)
 
+    def _is_dead_end(self, cell: Cell) -> bool:
+        """Return True if cell is a corridor cell with exactly 3 walls."""
+        r, c = cell
+        return cell not in self.blocked and self.grid[r][c] in (7, 11, 13, 14)
 
+    
+    
     def generate(self, animation_step: AnimationStep = None) -> None:
         """Build a new maze in self.grid.
 
@@ -257,3 +263,4 @@ class MazeGenerator:
         self.blocked = set()
         self.add42()
         algorithms[self.algorithm](animation_step)
+
