@@ -28,6 +28,11 @@ DIRS: dict[int, tuple[int, int, int]] = {
     W: (0, -1, E),
 }
 
+# move between two cells -> letter used in the output file
+LETTERS: dict[tuple[int, int], str] = {
+    (-1, 0): "N", (0, 1): "E", (1, 0): "S", (0, -1): "W",
+}
+
 # '42' pattern as (row, col) offsets from its top-left corner
 # perfect mode: 4 rows x 6 cols
 _PFOUR = {(0, 0), (1, 0), (1, 2), (2, 0), (2, 1), (2, 2), (3, 2)}
@@ -180,7 +185,7 @@ class MazeGenerator:
         and backtracks when stuck, until every reachable cell is visited.
 
         Args:
-            on_step: Optional function called as on_step(a, b) after
+            animation_step: Optional function called as animation_step(a, b) after
                 each wall opened between cells a and b (for animation).
         """
         visited: set[Cell] = {self.entry}
@@ -244,12 +249,80 @@ class MazeGenerator:
             (r + ir, c + ic) for bit, (ir, ic, _) in DIRS.items()
             if not self.grid[r][c] & bit
         ]
-    
+
+    def _is_wide_corridor(self, top: int, left: int) -> bool:
+        """Return True if the 3x3 square at (top, left) has no inner wall."""
+        if top < 0 or left < 0:
+            return False
+        if top + 3 > self.height or left + 3 > self.width:
+            return False
+        for r in range(top, top + 3):
+            for c in range(left, left + 3):
+                if c < left + 2 and self.grid[r][c] & E:
+                    return False
+                if r < top + 2 and self.grid[r][c] & S:
+                    return False
+        return True
+
+    def _makes_wide_corridor(self, a: Cell, b: Cell) -> bool:
+        """Return True if opening the wall a-b would create a wide corridor.
+
+        Opens the wall, checks every 3x3 square that contains both
+        cells, then closes the wall again.
+        """
+        before_a = self.grid[a[0]][a[1]]
+        before_b = self.grid[b[0]][b[1]]
+        self._open(a, b)
+        found = False
+        for top in range(max(a[0], b[0]) - 2, min(a[0], b[0]) + 1):
+            for left in range(max(a[1], b[1]) - 2, min(a[1], b[1]) + 1):
+                if self._is_wide_corridor(top, left):
+                    found = True
+        self.grid[a[0]][a[1]] = before_a
+        self.grid[b[0]][b[1]] = before_b
+        return found
+
+    def _remove_dead_ends(self, animation_step: AnimationStep = None) -> None:
+        """Remove dead-ends by opening one extra wall in each of them.
+
+        This adds loops, turning the perfect maze into a board with
+        several routes. A wall is never opened if it would create a
+        corridor wider than 2 cells. Passes repeat until nothing changes.
+
+        Args:
+            animation_step: Optional function called as
+                animation_step(a, b) after each wall opened between
+                cells a and b (for animation).
+        """
+        changed = True
+        while changed:
+            changed = False
+            for r in range(self.height):
+                for c in range(self.width):
+                    cell = (r, c)
+                    if not self._is_dead_end(cell):
+                        continue
+                    # closed walls we may open
+                    options = [
+                        n for n in self._neighbours(cell)
+                        if n not in self._reachable_neighbours(cell)
+                        and not self._makes_wide_corridor(cell, n)
+                    ]
+                    if not options:
+                        continue
+                    # prefer a neighbour that is also a dead-end
+                    twins = [n for n in options if self._is_dead_end(n)]
+                    nxt = self.rng.choice(twins or options)
+                    self._open(cell, nxt)
+                    if animation_step:
+                        animation_step(cell, nxt)
+                    changed = True
+
     def generate(self, animation_step: AnimationStep = None) -> None:
         """Build a new maze in self.grid.
 
         Closes every wall, places the '42' pattern, then carves the maze
-        with the chosen algorithm.
+        with the chosen algorithm and in non-perfect mode, removes dead-ends.
 
         Args:
             animation_step: Optional function called as
@@ -269,4 +342,5 @@ class MazeGenerator:
         self.blocked = set()
         self.add42()
         algorithms[self.algorithm](animation_step)
-
+        if not self.perfect:
+            self._remove_dead_ends(animation_step)
