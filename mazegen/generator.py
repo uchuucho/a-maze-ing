@@ -237,7 +237,13 @@ class MazeGenerator:
         r, c = cell
         return cell not in self.blocked and self.grid[r][c] in (7, 11, 13, 14)
 
-    
+    def _reachable_neighbours(self, cell: Cell) -> list[Cell]:
+        """List the neighbours reachable from cell (no wall between)."""
+        r, c = cell
+        return [
+            (r + ir, c + ic) for bit, (ir, ic, _) in DIRS.items()
+            if not self.grid[r][c] & bit
+        ]
     
     def generate(self, animation_step: AnimationStep = None) -> None:
         """Build a new maze in self.grid.
