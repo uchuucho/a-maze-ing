@@ -374,3 +374,32 @@ class MazeGenerator:
         path.reverse()
         return path
 
+    def to_hex(self) -> str:
+        """Return the maze in the output file format.
+
+        One hex digit per cell (row by row), an empty line, then the
+        entry, the exit and the shortest path as N/E/S/W letters.
+        """
+        lines = ["".join(format(cell, "X") for cell in row) for row in self.grid]
+        path = self.solve()
+        moves = "".join(
+            LETTERS[(b[0] - a[0], b[1] - a[1])]
+            for a, b in zip(path, path[1:])
+        )
+        lines.append("")
+        lines.append(f"{self.entry[0]},{self.entry[1]}")
+        lines.append(f"{self.exit[0]},{self.exit[1]}")
+        lines.append(moves)
+        return "\n".join(lines) + "\n"
+
+    def save(self, filename: str) -> None:
+        """Write the maze to filename in the output file format.
+
+        Args:
+            filename: Path of the file to write.
+
+        Raises:
+            OSError: If the file cannot be written.
+        """
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(self.to_hex())
