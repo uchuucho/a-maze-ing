@@ -272,15 +272,28 @@ class Maze:
 
         for i in range(self.config.height):
             for j in range(self.config.width):
-                print("0123456789abcde*#$"[self.map[i][j]], end="")
+                print("0123456789abcdef#$"[self.map[i][j]], end="")
             print()
 
 
     # printing maze pixel
     def __print_maze_pixel__(self) -> None:
+        p = self.pixels
         cell = self.config.cell
         step = cell + 1
+        for r in range(self.config.height):
+            for c in range(self.config.width):
+                x = self.map[r][c]
+                if x & 1 == 0:
+                    for j in range(step * c + 1, step *c + step):
+                        p[step * r][j].value = 0b1111
+                        #N, E, S, W = 1, 2, 4, 8
+                if x & 2 == 0 and c < self.config.width - 1:
+                    for i in range(step * r + 1, step * r + step):
+                        p[i][step * (c + 1)].value = 0b1111
+                    
+
         for i in range(step * self.config.height + 1):
             for j in range(step * self.config.width + 1):
-                print("0123456789abcde*O#xQ"[self.pixels[i][j].value], end="")
+                print("0123456789abcde*O#xQ"[p[i][j].value], end="")
             print()

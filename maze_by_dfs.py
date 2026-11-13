@@ -11,28 +11,23 @@ N, E, S, W = 1, 2, 4, 8
 DIRS = {N: (-1, 0, S), E: (0, 1, W), S: (1, 0, N), W: (0, -1, E)}
 
 # colors
-BG    = (10, 50, 60)        # cell background
+BG = (10, 50, 60)        # cell background
 WALL = (224, 163, 78)       # wall
-FRONTIER = (186, 252, 3)        # cells/passages on the current DFS stack
-HEAD  = (98, 252, 3)     # the cell DFS is standing on
+HEAD = (98, 252, 3)     # the cell DFS is standing on
 TRAIL = (120, 80, 40)    # in the stack, waiting
 
-PATH  = (255, 240, 200)     # shortest path
+PATH = (255, 240, 200)     # shortest path
 START = (235, 7, 7)     # entry 
-END   = (15, 28, 209)     # exit
+END = (10, 140, 12)     # exit
 
 
-def dfs_generate(maze: Maze, delay: float = 0.03) -> None:
+def dfs_generator(maze: Maze, delay: float = 0.03) -> None:
 
     random.seed(maze.config.seed)
 
     wd = maze.config.width
     ht = maze.config.height
     cell = maze.config.cell
-
-    adj: dict[
-        tuple[int, int], list[tuple[int, int]]
-    ] = {(i, j): [] for i in range(ht) for j in range(wd)}
 
     done: set[tuple[int, int]] = {maze.config.entry}
     stack: list[tuple[int, int]] = [maze.config.entry]
