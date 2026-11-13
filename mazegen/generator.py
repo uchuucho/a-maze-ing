@@ -99,7 +99,8 @@ class MazeGenerator:
     def add42(self) -> None:
         """Mark the '42' pattern cells as blocked, near the maze centre.
 
-        The pattern never covers the entry or the exit. If the maze is
+        The pattern never covers the entry or the exit, and in
+        non-perfect mode it leaves the centre cell open. If the maze is
         too small, an error message is printed and no cell is blocked.
         """
         (enr, enc) = self.entry
@@ -123,8 +124,9 @@ class MazeGenerator:
                     ih, iw = i, j
         else:
             shape = _NDEFOUR | _NDETWO
+            center = (self.height // 2, self.width // 2)
             if self.width < 8 or self.height < 8:
-                print("Error: maze too small for the '42' pattern")  # new
+                print("Error: maze too small for the '42' pattern")
                 return None
             ih, iw = 0, 0
             for i in range(1, self.height):
@@ -137,9 +139,11 @@ class MazeGenerator:
                         continue
                     if (exr - i, exc - j) in shape:
                         continue
+                    if (center[0] - i, center[1] - j) in shape:
+                        continue
                     ih, iw = i, j
         if (ih, iw) == (0, 0):
-            print("Error: maze too small for the '42' pattern")  # new
+            print("Error: maze too small for the '42' pattern")
             return None
         self.blocked = {(ih + i, iw + j) for (i, j) in shape}
 
