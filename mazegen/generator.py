@@ -348,3 +348,29 @@ class MazeGenerator:
         algorithms[self.algorithm](animation_step)
         if not self.perfect:
             self._remove_dead_ends(animation_step)
+
+    def solve(self) -> list[Cell]:
+        """Find the shortest path from the entry to the exit (BFS).
+
+        Returns:
+            The cells of the path, from entry to exit included, or an
+            empty list if the exit cannot be reached.
+        """
+        came_from: dict[Cell, Cell] = {self.entry: self.entry}
+        queue: deque[Cell] = deque([self.entry])
+        while queue:
+            cur = queue.popleft()
+            if cur == self.exit:
+                break
+            for n in self._reachable_neighbours(cur):
+                if n not in came_from:
+                    came_from[n] = cur
+                    queue.append(n)
+        if self.exit not in came_from:
+            return []
+        path = [self.exit]
+        while path[-1] != self.entry:
+            path.append(came_from[path[-1]])
+        path.reverse()
+        return path
+
