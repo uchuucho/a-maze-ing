@@ -14,8 +14,10 @@ from typing import Callable, Optional
 
 
 Cell = tuple[int, int]  # (row, col)
+# called as animation_step(a, b) after each wall opened between a and b
+AnimationStep = Optional[Callable[[Cell, Cell], None]]
 
-# wall (0->open, 1->closed)
+# walls (0->open, 1->closed)
 N, E, S, W = 1, 2, 4, 8
 
 # directions (row change, col change, opposite bit)
@@ -60,7 +62,7 @@ class MazeGenerator:
         height: int,
         entry: Cell,
         exit: Cell,
-        perfect: bool = True,
+        perfect: bool = False,
         seed: Optional[int] = None,
     ) -> None:
         """Store the settings and create a grid with every wall closed.
@@ -83,6 +85,7 @@ class MazeGenerator:
         self.grid: list[list[int]] = [
             [15] * width for _ in range(height)
         ]
+        # set of cells that make up the 42 pattern
         self.blocked: set[Cell] = set()
 
     def add42(self) -> None:
@@ -96,7 +99,7 @@ class MazeGenerator:
         if self.perfect:
             shape = _PFOUR | _PTWO
             if self.width < 8 or self.height < 6:
-                print("Error: maze too small for the '42' pattern")  # new
+                print("Error: maze too small for the '42' pattern")
                 return None
             ih, iw = 0, 0
             for i in range(1, self.height):
@@ -131,3 +134,63 @@ class MazeGenerator:
             print("Error: maze too small for the '42' pattern")  # new
             return None
         self.blocked = {(ih + i, iw + j) for (i, j) in shape}
+
+
+    def _open(self, a: Cell, b: Cell) -> None:
+        """Remove the wall between two neighbouring cells.
+
+        Both cells are updated, so the shared wall stays coherent.
+
+        Args:
+            a: First cell as (row, col).
+            b: Second cell, next to a.
+        """
+        dr, dc = b[0] - a[0], b[1] - a[1]
+        for bit, (ir, ic, opp) in DIRS.items():
+            if (ir, ic) == (dr, dc):
+                self.grid[a[0]][a[1]] &= ~bit
+                self.grid[b[0]][b[1]] &= ~opp
+                return
+
+    def _neighbours(self, cell: Cell) -> list[Cell]:
+        """List the cells next to cell that can be opened.
+
+        Args:
+            cell: A cell as (row, col).
+
+        Returns:
+            Adjacent cells inside the maze that are not part of the '42'.
+        """
+        r, c = cell
+        result: list[Cell] = []
+        for ir, ic, _ in DIRS.values():
+            nr, nc = r + ir, c + ic
+            inside = 0 <= nr < self.height and 0 <= nc < self.width
+            if inside and (nr, nc) not in self.blocked:
+                result.append((nr, nc))
+        return result
+
+    def _dfs(self, animation_step: AnimationStep = None) -> None:
+        """Carve a perfect maze with a randomized depth-first search.
+
+        Starts at the entry, walks to a random unvisited neighbour,
+        and backtracks when stuck, until every reachable cell is visited.
+
+        Args:
+            on_step: Optional function called as on_step(a, b) after
+                each wall opened between cells a and b (for animation).
+        """
+        visited: set[Cell] = {self.entry}
+        stack: list[Cell] = [self.entry]
+        while stack:
+            cur = stack[-1]
+            options = [n for n in self._neighbours(cur) if n not in visited]
+            if not options:
+                stack.pop()  # dead-end: backtrack
+                continue
+            nxt = self.rng.choice(options)
+            self._open(cur, nxt)
+            if animation_step:
+                animation_step(cur, nxt)
+            visited.add(nxt)
+            stack.append(nxt)
