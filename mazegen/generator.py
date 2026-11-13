@@ -64,6 +64,7 @@ class MazeGenerator:
         exit: Cell,
         perfect: bool = False,
         seed: Optional[int] = None,
+        algorithm: str = "dfs",
     ) -> None:
         """Store the settings and create a grid with every wall closed.
 
@@ -74,12 +75,14 @@ class MazeGenerator:
             exit: Exit cell as (row, col).
             perfect: Build a perfect maze if True.
             seed: Seed for reproducible mazes; None gives a random maze.
+            algorithm: Generation algorithm, "dfs" or "prim".
         """
         self.width = width
         self.height = height
         self.entry = entry
         self.exit = exit
         self.perfect = perfect
+        self.algorithm = algorithm
         self.rng = random.Random(seed)
         # 15 = 0b1111: all four walls closed
         self.grid: list[list[int]] = [
@@ -194,3 +197,63 @@ class MazeGenerator:
                 animation_step(cur, nxt)
             visited.add(nxt)
             stack.append(nxt)
+
+    def _prim(self, animation_step: AnimationStep = None) -> None:
+        """Carve a perfect maze with a randomized Prim's algorithm.
+
+        Grows the maze from the entry: repeatedly takes a random frontier
+        cell (next to the maze but not in it yet) and connects it to a
+        random neighbour that is already in the maze.
+
+        Args:
+            animation_step: Optional function called as
+                animation_step(a, b) after each wall opened between
+                cells a and b (for animation).
+        """
+        in_maze: set[Cell] = set()
+        frontier: list[Cell] = [self.entry]
+        queued: set[Cell] = {self.entry}
+        while frontier:
+            # take a random frontier cell (swap with last, then pop)
+            i = self.rng.randrange(len(frontier))
+            frontier[i], frontier[-1] = frontier[-1], frontier[i]
+            cur = frontier.pop()
+            links: list[Cell] = []
+            for n in self._neighbours(cur):
+                if n in in_maze:
+                    links.append(n)
+                elif n not in queued:
+                    queued.add(n)
+                    frontier.append(n)
+            if links:
+                nxt = self.rng.choice(links)
+                self._open(cur, nxt)
+                if animation_step:
+                    animation_step(cur, nxt)
+            in_maze.add(cur)
+
+
+    def generate(self, animation_step: AnimationStep = None) -> None:
+        """Build a new maze in self.grid.
+
+        Closes every wall, places the '42' pattern, then carves the maze
+        with the chosen algorithm.
+
+        Args:
+            animation_step: Optional function called as
+                animation_step(a, b) after each wall opened between
+                cells a and b (for animation).
+
+        Raises:
+            ValueError: If the algorithm name is unknown.
+        """
+        algorithms = {"dfs": self._dfs, "prim": self._prim}
+        if self.algorithm not in algorithms:
+            raise ValueError(
+                f"unknown algorithm '{self.algorithm}' "
+                f"(use one of: {', '.join(algorithms)})"
+            )
+        self.grid = [[15] * self.width for _ in range(self.height)]
+        self.blocked = set()
+        self.add42()
+        algorithms[self.algorithm](animation_step)
