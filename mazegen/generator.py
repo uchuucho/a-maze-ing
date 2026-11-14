@@ -14,6 +14,7 @@ from typing import Callable, Optional
 
 
 Cell = tuple[int, int]  # (row, col)
+
 # called as animation_step(a, b) after each wall opened between a and b
 AnimationStep = Optional[Callable[[Cell, Cell], None]]
 
@@ -147,7 +148,6 @@ class MazeGenerator:
             return None
         self.blocked = {(ih + i, iw + j) for (i, j) in shape}
 
-
     def _open(self, a: Cell, b: Cell) -> None:
         """Remove the wall between two neighbouring cells.
 
@@ -189,7 +189,7 @@ class MazeGenerator:
         and backtracks when stuck, until every reachable cell is visited.
 
         Args:
-            animation_step: Optional function called as animation_step(a, b) after
+        animation_step: Optional function called as animation_step(a, b) after
                 each wall opened between cells a and b (for animation).
         """
         visited: set[Cell] = {self.entry}
@@ -380,7 +380,9 @@ class MazeGenerator:
         One hex digit per cell (row by row), an empty line, then the
         entry, the exit and the shortest path as N/E/S/W letters.
         """
-        lines = ["".join(format(cell, "X") for cell in row) for row in self.grid]
+        lines = [
+            "".join(format(cell, "X") for cell in row) for row in self.grid
+            ]
         path = self.solve()
         moves = "".join(
             LETTERS[(b[0] - a[0], b[1] - a[1])]
