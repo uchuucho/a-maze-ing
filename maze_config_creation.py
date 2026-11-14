@@ -12,13 +12,9 @@ _PFOUR = {(0, 0), (1, 0), (1, 2), (2, 0), (2, 1), (2, 2), (3, 2)}
 _PTWO = {(0, 4), (0, 5), (1, 5), (2, 4), (3, 4), (3, 5)}
 _NDEFOUR = {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (3, 2), (4, 2), (5, 2)}
 _NDETWO = {(0, 4), (0, 5), (1, 5), (2, 5), (3, 4), (4, 4), (5, 4), (5, 5)}
-BG = (10, 50, 60)
-WALL = (224, 163, 78)
-S42 = (52, 55, 235)
 
 
 # === class: errors and rewriting existing error messages ===
-
 class ConfigError(Exception):
     pass
 
@@ -31,13 +27,13 @@ def _to_int(key: str, value: str) -> int:
 
 
 def _to_bool(key: str, value: str) -> bool:
-    if value in ("yes", "Yes", "true", "True", "1"):
+    if value in ("yes", "Yes", "true", "True", "1", "Y", "y"):
         return True
-    if value in ("no", "No", "false", "False", "0"):
+    if value in ("no", "No", "false", "False", "0", "N", "n"):
         return False
     raise ConfigError(
-        f"{key}: '{value}' is not a boolean "
-        "(use only 'yes/no', 'Yes/No', 'true/false' 'True/False', '1/0')"
+        f"{key}: '{value}' is not a boolean (use only "
+        "'y/n', 'Y/N', 'yes/no', 'Yes/No', 'true/false' 'True/False', '1/0')"
     )
 
 
@@ -49,7 +45,6 @@ def _to_point(key: str, value: str) -> tuple[int, int]:
 
 
 # === class: maze configuration ===
-
 @dataclass(frozen=True)
 class MazeConfig:
     height: int
@@ -82,7 +77,7 @@ class MazeConfig:
         if self.seed is not None and self.seed < 0:
             errors.append(f"SEED must be >= 0, but got {self.seed}")
         if self.cell < 1:
-                errors.append(f"CELL must be >= 1, but got {self.cell}")
+            errors.append(f"CELL must be >= 1, but got {self.cell}")
 
         if errors:
             raise ConfigError(
@@ -109,7 +104,7 @@ class MazeConfig:
 
         elems: dict[str, str] = {}
         for no, line in enumerate(content.splitlines(), start=1):
-            if not line.strip() or line.startswith('#'):
+            if not line.strip() or line.strip().startswith('#'):
                 continue
             fit = _CFORMAT.match(line)
             if not fit:
@@ -157,16 +152,16 @@ class MazeConfig:
         )
 
 
-# pixels: 
-# each maze cell consists of CELLxCELL pixels 
+# pixels:
+# each maze cell consists of CELLxCELL pixels
 # each wall consists of 1xCELL or CELLx1 pixels
 class Pixel:
-    def __init__(self, color: tuple[int, int, int], value: int) -> None:
+    def __init__(self, color: tuple[int, int, int], char: str) -> None:
         self.color = color
-        self.value = value
+        self.char = char
 
 
-# class: maze (array and pixels) 
+# class: maze (array and pixels)
 # using config and 42 symbol in the middle
 class Maze:
     def __init__(self, config: MazeConfig) -> None:
@@ -182,10 +177,10 @@ class Maze:
         step = self.config.cell + 1
         wd = step * config.width + 1
         ht = step * config.height + 1
-        self.pixels: list[list[Pixel]] = [
-            [Pixel((0,0,0), 0b0000) for _ in range(wd)] for _ in range(ht)
-        ]
 
+        self.pixels: list[list[Pixel]] = [
+            [Pixel((0, 0, 0), '.') for _ in range(wd)] for _ in range(ht)
+        ]
 
     # locating 42 symbol (0b10000)
     def add42(self) -> None:
@@ -196,10 +191,16 @@ class Maze:
                 return None
             ih, iw = 0, 0
             for i in range(1, self.config.height):
-                if 2 * (i + 2) > self.config.height or i + 5 > self.config.height:
+                if (
+                    2 * (i + 2) > self.config.height or
+                    i + 5 > self.config.height
+                ):
                     break
                 for j in range(1, self.config.width):
-                    if 2 * (j + 3) > self.config.width or j + 7 > self.config.width:
+                    if (
+                        2 * (j + 3) > self.config.width or
+                        j + 7 > self.config.width
+                    ):
                         break
                     if (enr - i, enc - j) in _PFOUR | _PTWO:
                         continue
@@ -215,10 +216,16 @@ class Maze:
                 return None
             ih, iw = 0, 0
             for i in range(1, self.config.height):
-                if 2 * (i + 2) >= self.config.height or i + 7 > self.config.height:
+                if (
+                    2 * (i + 2) >= self.config.height or
+                    i + 7 > self.config.height
+                ):
                     break
                 for j in range(1, self.config.width):
-                    if 2 * (j + 3) > self.config.width or j + 7 > self.config.width:
+                    if (
+                        2 * (j + 3) > self.config.width or
+                        j + 7 > self.config.width
+                    ):
                         break
                     if (enr - i, enc - j) in _NDEFOUR | _NDETWO:
                         continue
@@ -230,70 +237,83 @@ class Maze:
             for (i, j) in _NDEFOUR | _NDETWO:
                 self.map[ih + i][iw + j] = 0b10000
 
-
     # creating pixels
-    def pixel_init(self) -> None:
+    def pixel_update(
+            self,
+            wall: Pixel,  # tuple[int, int, int],
+            bg: Pixel,  # tuple[int, int, int],
+            s42: Pixel  # tuple[int, int, int]
+    ) -> None:
+
         cell = self.config.cell
         step = cell + 1
         wd = step * self.config.width + 1
         ht = step * self.config.height + 1
+
         for i in range(ht):
             for j in range(wd):
                 if i % step == 0 or j % step == 0:
-                    self.pixels[i][j].value = 0b10001 #wall
-                    self.pixels[i][j].color = WALL
+                    self.pixels[i][j] = wall  # wall
                 else:
-                    self.pixels[i][j].value = self.map[i // step][j // step]
-                    self.pixels[i][j].color = BG
+                    self.pixels[i][j] = bg  # bg
+
+        start = Pixel(bg.color, 'S')
+        end = Pixel(bg.color, 'E')
         for r in range(self.config.height):
             for c in range(self.config.width):
                 if self.map[r][c] != 0b10000:
+                    rc = step * r + cell // 2 + 1
+                    cc = step * c + cell // 2 + 1
+                    if (r, c) == self.config.entry:
+                        self.pixels[rc][cc] = start
+                    elif (r, c) == self.config.exit:
+                        self.pixels[rc][cc] = end
                     continue
+
                 for i in range(step * r + 1, step * r + step):
                     for j in range(step * c + 1, step * c + step):
-                        self.pixels[i][j].value = 0b10000 #42
-                        self.pixels[i][j].color = S42 #42
+                        self.pixels[i][j] = s42  # 42
+
                 if self.map[r + 1][c] == 0b10000:
                     i = step * r + step
                     for j in range(step * c + 1, step * c + step):
-                        self.pixels[i][j].value = 0b10000 #42
-                        self.pixels[i][j].color = S42 #42
+                        self.pixels[i][j] = s42  # 42
+
                 if self.map[r][c + 1] == 0b10000:
                     j = step * c + step
                     for i in range(step * r + 1, step * r + step):
-                        self.pixels[i][j].value = 0b10000 #42
-                        self.pixels[i][j].color = S42 #42
-
-
-
+                        self.pixels[i][j] = s42  # 42
 
     # printing maze map
-    def __print_maze_map__(self) -> None:
-
+    def __save_maze_map__(self, sol: str = "") -> None:
+        s = ""
         for i in range(self.config.height):
             for j in range(self.config.width):
-                print("0123456789abcdef#$"[self.map[i][j]], end="")
-            print()
-
+                s += "0123456789ABCDEFF"[self.map[i][j]]
+            s += '\n'
+        try:
+            with open(self.config.output_file, "w", encoding="utf-8") as f:
+                f.write(s)
+                f.write(
+                    f"{self.config.entry[0]},"
+                    f"{self.config.entry[1]}"
+                    "       #entry   (x,y)\n"
+                    f"{self.config.exit[0]},"
+                    f"{self.config.exit[1]}"
+                    "        #exit    (x,y)\n"
+                    f"{sol}"
+                )
+        except Exception:
+            raise ConfigError(
+                f"Impossible to write to the file: {self.config.output_file}"
+            )
 
     # printing maze pixel
     def __print_maze_pixel__(self) -> None:
         p = self.pixels
         cell = self.config.cell
         step = cell + 1
-        for r in range(self.config.height):
-            for c in range(self.config.width):
-                x = self.map[r][c]
-                if x & 1 == 0:
-                    for j in range(step * c + 1, step *c + step):
-                        p[step * r][j].value = 0b1111
-                        #N, E, S, W = 1, 2, 4, 8
-                if x & 2 == 0 and c < self.config.width - 1:
-                    for i in range(step * r + 1, step * r + step):
-                        p[i][step * (c + 1)].value = 0b1111
-                    
-
         for i in range(step * self.config.height + 1):
             for j in range(step * self.config.width + 1):
-                print("0123456789abcde*O#xQ"[p[i][j].value], end="")
+                print(p[i][j].char, end="")
             print()
