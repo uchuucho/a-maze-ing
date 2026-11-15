@@ -161,6 +161,40 @@ class Canvas:
         sys.stdout.write(self.chars(box))
         sys.stdout.flush()
 
+    def link_box(self, a: Cell, b: Cell) -> Box:
+        """Return the 1-pixel line joining the centers of two neighbors."""
+        off = 1 + (self.cell_size - 1) // 2
+        return (self.step * min(a[0], b[0]) + off,
+                self.step * max(a[0], b[0]) + off,
+                self.step * min(a[1], b[1]) + off,
+                self.step * max(a[1], b[1]) + off)
+
+    def show_path(self, visible: bool, delay: float = 0.0) -> None:
+        """Draw the shortest path as a thin line, or erase it.
+
+        Args:
+            visible: True to draw the path, False to erase it.
+            delay: Seconds between two segments (to animate the drawing).
+        """
+        path = self.gen.solve()
+        kind = "path" if visible else "floor"
+        for a, b in zip(path, path[1:]):
+            box = self.link_box(a, b)
+            self.fill(box, kind)
+            self.show(box)
+            time.sleep(delay)
+        for cell, tile_kind in ((self.gen.entry, "entry"),
+                                (self.gen.exit, "exit")):
+            self.show(self.tile(cell, tile_kind, self.cell_size))
+            
+    def set_wall_color(self, color: Color) -> None:
+        """Change the wall color and redraw the whole maze.
+
+        Args:
+            color: The new wall color as (R, G, B).
+        """
+        self.palette["wall"] = color
+        self.draw()
 
 class Animator:
     """Draw the maze while the generator builds it."""
