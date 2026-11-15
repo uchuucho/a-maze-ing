@@ -30,7 +30,7 @@ PALETTE: dict[str, Color] = {
 WALL_COLORS: list[Color] = [
     (98, 92, 128), (140, 140, 150), (70, 110, 150), (130, 80, 110),
 ]
-SOFT = "~" 
+SOFT = "~"
 SOFTNESS = 0.45  # SOFT and SOFTNESS are used to get the rounded corners
 
 # explosion colors, from first frame to last (white-hot -> fading out)

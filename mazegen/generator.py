@@ -52,6 +52,7 @@ class MazeGenerator:
         entry: Entry cell as (row, col).
         exit: Exit cell as (row, col).
         perfect: If True, exactly one path between any two cells.
+        algorithm: Name of the generation algorithm.
         rng: Random generator, seeded for reproducibility.
         grid: One int per cell; its 4 low bits are the walls.
         blocked: Cells that form the '42' pattern (never opened).
@@ -99,10 +100,10 @@ class MazeGenerator:
         self.blocked: set[Cell] = set()
 
     def add42(self) -> None:
-        """Mark the '42' pattern cells as blocked, near the maze centre.
+        """Mark the '42' pattern cells as blocked, near the maze center.
 
         The pattern never covers the entry or the exit, and in
-        non-perfect mode it leaves the centre cell open. If the maze is
+        non-perfect mode it leaves the center cell open. If the maze is
         too small, an error message is printed and no cell is blocked.
         """
         (enr, enc) = self.entry
@@ -150,7 +151,7 @@ class MazeGenerator:
         self.blocked = {(ih + i, iw + j) for (i, j) in shape}
 
     def _open(self, a: Cell, b: Cell) -> None:
-        """Remove the wall between two neighbouring cells.
+        """Remove the wall between two neighboring cells.
 
         Both cells are updated, so the shared wall stays coherent.
 
@@ -165,7 +166,7 @@ class MazeGenerator:
                 self.grid[b[0]][b[1]] &= ~opp
                 return
 
-    def _neighbours(self, cell: Cell) -> list[Cell]:
+    def _neighbors(self, cell: Cell) -> list[Cell]:
         """List the cells next to cell that can be opened.
 
         Args:
@@ -186,19 +187,19 @@ class MazeGenerator:
     def _dfs(self, animation_step: AnimationStep = None) -> None:
         """Carve a perfect maze with a randomized depth-first search.
 
-        Starts at the entry, walks to a random unvisited neighbour,
+        Starts at the entry, walks to a random unvisited neighbor,
         and backtracks when stuck, until every reachable cell is visited.
 
         Args:
             animation_step: Optional function called as
-            animation_step(a, b) after each wall opened between
-            cells a and b (for animation).
+                animation_step(a, b) after each wall opened between
+                cells a and b (for animation).
         """
         visited: set[Cell] = {self.entry}
         stack: list[Cell] = [self.entry]
         while stack:
             cur = stack[-1]
-            options = [n for n in self._neighbours(cur) if n not in visited]
+            options = [n for n in self._neighbors(cur) if n not in visited]
             if not options:
                 stack.pop()  # dead-end: backtrack
                 continue
@@ -214,7 +215,7 @@ class MazeGenerator:
 
         Grows the maze from the entry: repeatedly takes a random frontier
         cell (next to the maze but not in it yet) and connects it to a
-        random neighbour that is already in the maze.
+        random neighbor that is already in the maze.
 
         Args:
             animation_step: Optional function called as
@@ -230,7 +231,7 @@ class MazeGenerator:
             frontier[i], frontier[-1] = frontier[-1], frontier[i]
             cur = frontier.pop()
             links: list[Cell] = []
-            for n in self._neighbours(cur):
+            for n in self._neighbors(cur):
                 if n in in_maze:
                     links.append(n)
                 elif n not in queued:
@@ -246,7 +247,7 @@ class MazeGenerator:
     def _kruskal(self, animation_step: AnimationStep = None) -> None:
         """Carve a perfect maze with a randomized Kruskal's algorithm.
 
-        Every cell starts in its own group. Walls between neighbours are
+        Every cell starts in its own group. Walls between neighbors are
         taken in random order; a wall is opened only if it joins two
         different groups, so no loop is ever created.
 
@@ -263,7 +264,7 @@ class MazeGenerator:
                     continue
                 group[(r, c)] = (r, c)
                 # east and south only, so each wall is listed once
-                for n in self._neighbours((r, c)):
+                for n in self._neighbors((r, c)):
                     if n > (r, c):
                         walls.append(((r, c), n))
         self.rng.shuffle(walls)
@@ -299,7 +300,7 @@ class MazeGenerator:
         cur: Optional[Cell] = self.entry
         while cur is not None:
             # kill: random walk
-            options = [n for n in self._neighbours(cur) if n not in visited]
+            options = [n for n in self._neighbors(cur) if n not in visited]
             if options:
                 nxt = self.rng.choice(options)
                 self._open(cur, nxt)
@@ -315,7 +316,7 @@ class MazeGenerator:
                     cell = (r, c)
                     if cell in visited or cell in self.blocked:
                         continue
-                    links = [n for n in self._neighbours(cell)
+                    links = [n for n in self._neighbors(cell)
                              if n in visited]
                     if links:
                         nxt = self.rng.choice(links)
@@ -333,8 +334,8 @@ class MazeGenerator:
         r, c = cell
         return cell not in self.blocked and self.grid[r][c] in (7, 11, 13, 14)
 
-    def _reachable_neighbours(self, cell: Cell) -> list[Cell]:
-        """List the neighbours reachable from cell (no wall between)."""
+    def _reachable_neighbors(self, cell: Cell) -> list[Cell]:
+        """List the neighbors reachable from cell (no wall between)."""
         r, c = cell
         return [
             (r + ir, c + ic) for bit, (ir, ic, _) in DIRS.items()
@@ -395,13 +396,13 @@ class MazeGenerator:
                         continue
                     # closed walls we may open
                     options = [
-                        n for n in self._neighbours(cell)
-                        if n not in self._reachable_neighbours(cell)
+                        n for n in self._neighbors(cell)
+                        if n not in self._reachable_neighbors(cell)
                         and not self._makes_wide_corridor(cell, n)
                     ]
                     if not options:
                         continue
-                    # prefer a neighbour that is also a dead-end
+                    # prefer a neighbor that is also a dead-end
                     twins = [n for n in options if self._is_dead_end(n)]
                     nxt = self.rng.choice(twins or options)
                     self._open(cell, nxt)
@@ -454,7 +455,7 @@ class MazeGenerator:
             cur = queue.popleft()
             if cur == self.exit:
                 break
-            for n in self._reachable_neighbours(cur):
+            for n in self._reachable_neighbors(cur):
                 if n not in came_from:
                     came_from[n] = cur
                     queue.append(n)
@@ -474,7 +475,7 @@ class MazeGenerator:
         """
         lines = [
             "".join(format(cell, "X") for cell in row) for row in self.grid
-            ]
+        ]
         path = self.solve()
         moves = "".join(
             LETTERS[(b[0] - a[0], b[1] - a[1])]
