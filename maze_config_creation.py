@@ -8,10 +8,6 @@ ALGORITHMS = {'dfs', 'hunt_and_kill', 'kruskal', 'prim'}
 REQUIRED = {'WIDTH', 'HEIGHT', 'ENTRY', 'EXIT', 'OUTPUT_FILE'}
 KEYWORDS = REQUIRED | {'PERFECT', 'ALGORITHM', 'SEED', 'CELL'}
 _CFORMAT = re.compile(r"^([A-Z_]+)=(\S+)$")
-_PFOUR = {(0, 0), (1, 0), (1, 2), (2, 0), (2, 1), (2, 2), (3, 2)}
-_PTWO = {(0, 4), (0, 5), (1, 5), (2, 4), (3, 4), (3, 5)}
-_NDEFOUR = {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (3, 2), (4, 2), (5, 2)}
-_NDETWO = {(0, 4), (0, 5), (1, 5), (2, 5), (3, 4), (4, 4), (5, 4), (5, 5)}
 
 
 # === class: errors and rewriting existing error messages ===
@@ -38,10 +34,13 @@ def _to_bool(key: str, value: str) -> bool:
 
 
 def _to_point(key: str, value: str) -> tuple[int, int]:
+    """Read 'x,y' (column, row) and return it as (row, col)."""
     coords = value.split(',')
     if len(coords) != 2:
-        raise ConfigError(f"{key}: expected 'row,col', got '{value}'")
-    return _to_int(key, coords[0].strip()), _to_int(key, coords[1].strip())
+        raise ConfigError(f"{key}: expected 'x,y', got '{value}'")
+    x = _to_int(key, coords[0].strip())
+    y = _to_int(key, coords[1].strip())
+    return y, x
 
 
 # === class: maze configuration ===
@@ -64,10 +63,10 @@ class MazeConfig:
         if self.height < 1:
             errors.append(f"HEIGHT must be >= 1, but got {self.height}")
         if self.width < 1:
-            errors.append(f"HEIGHT must be >= 1, but got {self.width}")
+            errors.append(f"WIDTH must be >= 1, but got {self.width}")
         for key, (r, c) in (('ENTRY', self.entry), ('EXIT', self.exit)):
             if not (0 <= r < self.height and 0 <= c < self.width):
-                errors.append(f"{key} {(r, c)} is outside the grid")
+                errors.append(f"{key} {(c, r)} is outside the grid")
         if self.entry == self.exit:
             errors.append("ENTRY and EXIT must be different")
         if self.output_file is None:
@@ -150,176 +149,3 @@ class MazeConfig:
             cell=_to_int('CELL', dct['CELL']) if 'CELL' in dct else 3,
             algorithm=dct['ALGORITHM'] if 'ALGORITHM' in dct else 'dfs'
         )
-
-
-# pixels:
-# each maze cell consists of CELLxCELL pixels
-# each wall consists of 1xCELL or CELLx1 pixels
-class Pixel:
-    def __init__(self, color: tuple[int, int, int], char: str) -> None:
-        self.color = color
-        self.char = char
-
-
-# class: maze (array and pixels)
-# using config and 42 symbol in the middle
-class Maze:
-    def __init__(self, config: MazeConfig) -> None:
-        self.config = config
-
-        # maze map for printing output
-        self.map: list[list[int]] = [
-            [0b1111 for _ in range(config.width)]
-            for _ in range(config.height)
-        ]
-
-        # maze pixel
-        step = self.config.cell + 1
-        wd = step * config.width + 1
-        ht = step * config.height + 1
-
-        self.pixels: list[list[Pixel]] = [
-            [Pixel((0, 0, 0), '.') for _ in range(wd)] for _ in range(ht)
-        ]
-
-    # locating 42 symbol (0b10000)
-    def add42(self) -> None:
-        (enr, enc) = self.config.entry
-        (exr, exc) = self.config.exit
-        if self.config.perfect:
-            if self.config.width < 8 or self.config.height < 6:
-                return None
-            ih, iw = 0, 0
-            for i in range(1, self.config.height):
-                if (
-                    2 * (i + 2) > self.config.height or
-                    i + 5 > self.config.height
-                ):
-                    break
-                for j in range(1, self.config.width):
-                    if (
-                        2 * (j + 3) > self.config.width or
-                        j + 7 > self.config.width
-                    ):
-                        break
-                    if (enr - i, enc - j) in _PFOUR | _PTWO:
-                        continue
-                    if (exr - i, exc - j) in _PFOUR | _PTWO:
-                        continue
-                    ih, iw = i, j
-            if (ih, iw) == (0, 0):
-                return None
-            for (i, j) in _PFOUR | _PTWO:
-                self.map[ih + i][iw + j] = 0b10000
-        else:
-            if self.config.width < 8 or self.config.height < 8:
-                return None
-            ih, iw = 0, 0
-            for i in range(1, self.config.height):
-                if (
-                    2 * (i + 2) >= self.config.height or
-                    i + 7 > self.config.height
-                ):
-                    break
-                for j in range(1, self.config.width):
-                    if (
-                        2 * (j + 3) > self.config.width or
-                        j + 7 > self.config.width
-                    ):
-                        break
-                    if (enr - i, enc - j) in _NDEFOUR | _NDETWO:
-                        continue
-                    if (exr - i, exc - j) in _NDEFOUR | _NDETWO:
-                        continue
-                    ih, iw = i, j
-            if (ih, iw) == (0, 0):
-                return None
-            for (i, j) in _NDEFOUR | _NDETWO:
-                self.map[ih + i][iw + j] = 0b10000
-
-    # creating pixels
-    def pixel_update(
-            self,
-            wall: Pixel,  # tuple[int, int, int],
-            bg: Pixel,  # tuple[int, int, int],
-            s42: Pixel  # tuple[int, int, int]
-    ) -> None:
-
-        cell = self.config.cell
-        step = cell + 1
-        wd = step * self.config.width + 1
-        ht = step * self.config.height + 1
-
-        for i in range(ht):
-            for j in range(wd):
-                if i % step == 0 or j % step == 0:
-                    self.pixels[i][j] = wall  # wall
-                else:
-                    self.pixels[i][j] = bg  # bg
-
-        start = Pixel(bg.color, 'S')
-        end = Pixel(bg.color, 'E')
-        for r in range(self.config.height):
-            for c in range(self.config.width):
-                if self.map[r][c] != 0b10000:
-                    rc = step * r + cell // 2 + 1
-                    cc = step * c + cell // 2 + 1
-                    if (r, c) == self.config.entry:
-                        self.pixels[rc][cc] = start
-                    elif (r, c) == self.config.exit:
-                        self.pixels[rc][cc] = end
-                    continue
-
-                for i in range(step * r + 1, step * r + step):
-                    for j in range(step * c + 1, step * c + step):
-                        self.pixels[i][j] = s42  # 42
-
-                if self.map[r + 1][c] == 0b10000:
-                    i = step * r + step
-                    for j in range(step * c + 1, step * c + step):
-                        self.pixels[i][j] = s42  # 42
-
-                if self.map[r][c + 1] == 0b10000:
-                    j = step * c + step
-                    for i in range(step * r + 1, step * r + step):
-                        self.pixels[i][j] = s42  # 42
-
-    # printing maze map
-    def __save_maze_map__(self, sol: str = "") -> None:
-        s = ""
-        for i in range(self.config.height):
-            for j in range(self.config.width):
-                s += "0123456789ABCDEFF"[self.map[i][j]]
-            s += '\n'
-        s = s + "\n" + f"{self.config.entry[0]},{self.config.entry[1]}\n"
-        s = s + f"{self.config.exit[0]},{self.config.exit[1]}\n"
-        s = s + f"{sol}\n"
-        try:
-            with open(self.config.output_file, "w", encoding="utf-8") as f:
-                f.write(s)
-        except OSError as e:
-            raise ConfigError(
-                f"Impossible to write to the file: "
-                f"{self.config.output_file} ({e})"
-            ) from e
-
-    # printing maze pixel
-    def __print_maze_pixel__(self) -> None:
-        p = self.pixels
-        cell = self.config.cell
-        step = cell + 1
-        for i in range(step * self.config.height + 1):
-            for j in range(step * self.config.width + 1):
-                print(p[i][j].char, end="")
-            print()
-
-
-# === class containing directions dict and colors
-@dataclass(frozen=True)
-class Theme:
-    dirs: dict[int, tuple[int, int, int]]
-    bg: tuple[int, int, int]  # background color
-    head: tuple[int, int, int]  # head of queue
-    trail: tuple[int, int, int]  # trail color in queue
-    start: tuple[int, int, int]  # start=entry color
-    end: tuple[int, int, int]  # end=exit color
