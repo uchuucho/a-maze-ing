@@ -8,6 +8,8 @@ color, bottom pixel = background color).
 import sys
 import shutil
 import time
+import math
+import random
 from mazegen import MazeGenerator
 from mazegen.generator import E, S
 
@@ -30,6 +32,12 @@ WALL_COLORS: list[Color] = [
 ]
 SOFT = "~"      
 SOFTNESS = 0.45  # SOFT and SOFTNESS are used to get the rounded corners
+
+# explosion colors, from first frame to last (white-hot -> fading out)
+EXPLOSION: list[Color] = [
+    (255, 255, 255), (255, 200, 235), (255, 121, 198),
+    (210, 90, 200), (167, 139, 250), (60, 50, 90),
+]
 
 
 class Canvas:
@@ -195,6 +203,41 @@ class Canvas:
         """
         self.palette["wall"] = color
         self.draw()
+
+    def explode(self, cell: Cell, frames: int = 80,
+                particles: int = 500, delay: float = 0.03) -> None:
+        """Play a firework centered on cell; the maze is left unchanged.
+
+        Args:
+            cell: Where the firework starts.
+            frames: Number of animation frames.
+            particles: Number of particles.
+            delay: Seconds between frames.
+        """
+        i0, i1, j0, j1 = self.cell_box(cell)
+        cy, cx = (i0 + i1) / 2, (j0 + j1) / 2
+        speeds: list[tuple[float, float]] = []
+        for _ in range(particles):
+            angle = random.uniform(0, 2 * math.pi)
+            speed = random.uniform(0.6, 2.2)
+            speeds.append((math.cos(angle) * speed, math.sin(angle) * speed))
+        shown: set[tuple[int, int]] = set()
+        for t in range(frames):
+            color = EXPLOSION[t * len(EXPLOSION) // frames]
+            over: dict[tuple[int, int], Color] = {}
+            for vx, vy in speeds:
+                y, x = round(cy + vy * t), round(cx + vx * t)
+                if 0 <= y < self.rows and 0 <= x < self.cols:
+                    over[(y, x)] = color
+            now = {(y - y % 2, x) for y, x in over}
+            # redraw last frame's spots (now empty) and this frame's spots
+            sys.stdout.write("".join(
+                self.chars((y, y, x, x), over) for y, x in shown | now))
+            sys.stdout.flush()
+            shown = now
+            time.sleep(delay)
+        sys.stdout.write("".join(self.chars((y, y, x, x)) for y, x in shown))
+        sys.stdout.flush()
 
 class Animator:
     """Draw the maze while the generator builds it."""
