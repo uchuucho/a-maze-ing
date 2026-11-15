@@ -186,7 +186,7 @@ class Canvas:
         for cell, tile_kind in ((self.gen.entry, "entry"),
                                 (self.gen.exit, "exit")):
             self.show(self.tile(cell, tile_kind, self.cell_size))
-            
+
     def set_wall_color(self, color: Color) -> None:
         """Change the wall color and redraw the whole maze.
 
@@ -263,3 +263,17 @@ def fit_cell_size(width: int, height: int, wanted: int) -> int:
         if step * width + 1 <= cols and (step * height + 2) // 2 <= lines:
             return size
     return 0
+
+def legend(canvas: Canvas) -> str:
+    """Return a one-line color legend for the maze.
+
+    Args:
+        canvas: The canvas whose current colors are shown.
+    """
+    names = [("wall", "wall"), ("entry", "entry"), ("exit", "exit"),
+             ("path", "shortest path"), ("42", "42 pattern")]
+    items = []
+    for kind, label in names:
+        r, g, b = canvas.palette[kind]
+        items.append(f"\x1b[48;2;{r};{g};{b}m  \x1b[0m {label}")
+    return "   ".join(items)
