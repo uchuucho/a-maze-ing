@@ -9,3 +9,6 @@ maze_analyzer.py
 maze.txt
 test_generator.py
 en.subject.pdf
+big.txt
+big_maze.txt
+output.txt
