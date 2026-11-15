@@ -14,7 +14,6 @@ _NDEFOUR = {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (3, 2), (4, 2), (5, 2)}
 _NDETWO = {(0, 4), (0, 5), (1, 5), (2, 5), (3, 4), (4, 4), (5, 4), (5, 5)}
 
 
-
 # === class: errors and rewriting existing error messages ===
 class ConfigError(Exception):
     pass
@@ -321,6 +320,6 @@ class Theme:
     dirs: dict[int, tuple[int, int, int]]
     bg: tuple[int, int, int]  # background color
     head: tuple[int, int, int]  # head of queue
-    trail: tuple[int, int, int]  # trail color in queue    
+    trail: tuple[int, int, int]  # trail color in queue
     start: tuple[int, int, int]  # start=entry color
     end: tuple[int, int, int]  # end=exit color

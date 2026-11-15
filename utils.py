@@ -114,7 +114,7 @@ def remove_dead_ends(
     dirs: dict[int, tuple[int, int, int]],
     delay: float = 0.03
 ) -> None:
-    
+
     for r in range(maze.config.height):
         for c in range(maze.config.width):
             if maze.map[r][c] not in [7, 11, 13, 14]:
@@ -155,7 +155,7 @@ def remove_dead_ends(
                 (i, j) for i in range(r - 1, r + 2)
                 for j in range(c - 1, c + 2)
             ]
-            if any(maze.map[i][j] == 0b10000 for i,j in block):
+            if any(maze.map[i][j] == 0b10000 for i, j in block):
                 continue
             if all(
                 (j == c + 1 or not maze.map[i][j] & e) and
@@ -167,8 +167,6 @@ def remove_dead_ends(
                 maze.map[r][c - 1] |= e
                 maze.map[r][c] |= w
                 break
-                    
-
 
 
 # finding a shrtest path

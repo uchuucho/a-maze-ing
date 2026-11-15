@@ -87,7 +87,7 @@ def agenda(maze: Maze) -> None:
     sys.stdout.flush()
 
 
-def bottom(maze: Maze, msg: str="") -> None:
+def bottom(maze: Maze, msg: str = "") -> None:
     park(maze)
     agenda(maze)
     print("\nPress [Enter] to exit the program")
@@ -101,7 +101,8 @@ def bottom(maze: Maze, msg: str="") -> None:
         print(f"{msg}")
     print()
 
-#building and printing a maze
+
+# building and printing a maze
 def build(maze: Maze, delay: float = 0.0) -> None:
     # raw maze: clean screen
     sys.stdout.write(
@@ -125,8 +126,7 @@ def build(maze: Maze, delay: float = 0.0) -> None:
     else:
         raise ConfigError("Unknown algorithm")
 
-    #sys.stdout.write(f"\x1b[{len(maze.pixels)//2 + 1};1H\x1b[?25h\n")
-    sys.stdout.write(f"\x1b[?25h\n")
+    sys.stdout.write("\x1b[?25h\n")
 
     park(maze)
     agenda(maze)
@@ -157,7 +157,7 @@ def main(maze: Maze) -> None:
             n = 0
             print_path(maze, Pixel(BG, '*'), START, END, DIRS, 0.00)
 
-        #printing blueprints/pixels
+        # printing blueprints/pixels
         elif s == 'b':
             # enter alternate screen, cursor home
             sys.stdout.write("\x1b[?1049h\x1b[H")
@@ -196,7 +196,7 @@ def main(maze: Maze) -> None:
                 new_maze = Maze(new_cfg)
                 new_maze.add42()
                 new_maze.pixel_update(
-                    Pixel(wall, '#'), Pixel(BG, '*'), s42 = Pixel(S42, 'o')
+                    Pixel(wall, '#'), Pixel(BG, '*'), Pixel(S42, 'o')
                 )
             except (ConfigError, OSError, ValueError) as e:
                 msg = f"Error: {e}"
@@ -220,7 +220,7 @@ def main(maze: Maze) -> None:
             sys.stdout.write("\x1b7")                      # save cursor
             sys.stdout.write("\x1b[H" + rendering(maze))   # redraw maze
             sys.stdout.write("\x1b8")                      # restore cursor
-            sys.stdout.flush()            
+            sys.stdout.flush()
 
 
 if __name__ == "__main__":
@@ -235,7 +235,7 @@ if __name__ == "__main__":
         maze = Maze(cfg)
         maze.add42()
         maze.pixel_update(
-            Pixel(WALL, '#'), Pixel(BG, '*'), s42 = Pixel(S42, 'o')
+            Pixel(WALL, '#'), Pixel(BG, '*'), Pixel(S42, 'o')
         )
     except (ConfigError, OSError, ValueError) as e:
         print(f"Error: {e}")
