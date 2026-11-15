@@ -1,17 +1,11 @@
-from maze_config_creation import Maze, Pixel
+from maze_config_creation import Maze, Pixel, Theme
 from utils import paint_wall, paint_cell, remove_dead_ends
 import random
 import time
 
 
 def hunt_and_kill_generator(
-        maze: Maze,
-        bg: tuple[int, int, int],
-        trail: tuple[int, int, int],
-        ss: tuple[int, int, int],
-        ee: tuple[int, int, int],
-        dirs: dict[int, tuple[int, int, int]],
-        delay: float = 0.08
+        maze: Maze, th: Theme, delay: float = 0.08
 ) -> None:
 
     random.seed(maze.config.seed)
@@ -23,14 +17,14 @@ def hunt_and_kill_generator(
     start = (0, 0)
     visited: set[tuple[int, int]] = {start}
     r, c = start
-    paint_cell(maze, r, c, Pixel(trail, '*'))
+    paint_cell(maze, r, c, Pixel(th.trail, '*'))
     time.sleep(delay)
 
     while True:
         # KILL phase
         neighbors = [
             (bit, r + ir, c + ic, opp)
-            for bit, (ir, ic, opp) in dirs.items() if (
+            for bit, (ir, ic, opp) in th.dirs.items() if (
                 0 <= r + ir < ht and 0 <= c + ic < wd and
                 (r + ir, c + ic) not in visited and
                 maze.map[r+ir][c+ic] != 0b10000
@@ -40,9 +34,9 @@ def hunt_and_kill_generator(
             bit, nr, nc, opp = random.choice(neighbors)
             maze.map[r][c] &= ~bit
             maze.map[nr][nc] &= ~opp
-            paint_cell(maze, r, c, Pixel(bg, '*'))
-            paint_cell(maze, nr, nc, Pixel(bg, '*'))
-            paint_wall(maze, (r, c), (nr, nc), Pixel(bg, '*'))
+            paint_cell(maze, r, c, Pixel(th.bg, '*'))
+            paint_cell(maze, nr, nc, Pixel(th.bg, '*'))
+            paint_wall(maze, (r, c), (nr, nc), Pixel(th.bg, '*'))
             time.sleep(delay)
 
             visited.add((nr, nc))
@@ -58,16 +52,16 @@ def hunt_and_kill_generator(
                 # visited neighbors of this unvisited cell
                 vis_nbrs = [
                     (bit, hr + ir, hc + ic, opp)
-                    for bit, (ir, ic, opp) in dirs.items()
+                    for bit, (ir, ic, opp) in th.dirs.items()
                     if (hr + ir, hc + ic) in visited
                 ]
                 if vis_nbrs:
                     bit, vr, vc, opp = random.choice(vis_nbrs)
                     maze.map[hr][hc] &= ~bit
                     maze.map[vr][vc] &= ~opp
-                    paint_cell(maze, hr, hc, Pixel(bg, '*'))
-                    paint_cell(maze, vr, vc, Pixel(bg, '*'))
-                    paint_wall(maze, (hr, hc), (vr, vc), Pixel(bg, '*'))
+                    paint_cell(maze, hr, hc, Pixel(th.bg, '*'))
+                    paint_cell(maze, vr, vc, Pixel(th.bg, '*'))
+                    paint_wall(maze, (hr, hc), (vr, vc), Pixel(th.bg, '*'))
                     time.sleep(delay)
 
                     visited.add((hr, hc))
@@ -80,9 +74,9 @@ def hunt_and_kill_generator(
             break
 
     if not maze.config.perfect:
-        remove_dead_ends(maze, bg, dirs, delay)
+        remove_dead_ends(maze, th.bg, th.dirs, delay)
 
     start = maze.config.entry
     end = maze.config.exit
-    paint_cell(maze, *start, Pixel(ss, 'S'))
-    paint_cell(maze, *end, Pixel(ee, 'E'))
+    paint_cell(maze, *start, Pixel(th.start, 'S'))
+    paint_cell(maze, *end, Pixel(th.end, 'E'))

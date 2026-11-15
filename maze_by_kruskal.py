@@ -1,4 +1,4 @@
-from maze_config_creation import Maze, Pixel
+from maze_config_creation import Maze, Pixel, Theme
 from utils import paint_wall, paint_cell, remove_dead_ends
 import random
 import time
@@ -23,15 +23,7 @@ def unit_roots(
     root[x] = y
 
 
-def kruskal_generator(
-        maze: Maze,
-        bg: tuple[int, int, int],
-        trail: tuple[int, int, int],
-        ss: tuple[int, int, int],
-        ee: tuple[int, int, int],
-        dirs: dict[int, tuple[int, int, int]],
-        delay: float = 0.08
-) -> None:
+def kruskal_generator(maze: Maze, th: Theme, delay: float = 0.08) -> None:
 
     random.seed(maze.config.seed)
 
@@ -44,7 +36,7 @@ def kruskal_generator(
     for r in range(ht):
         for c in range(wd):
             root[(r, c)] = (r, c)
-            for bit, (ir, ic, opp) in dirs.items():
+            for bit, (ir, ic, opp) in th.dirs.items():
                 if (
                     0 <= r + ir < ht and 0 <= c + ic < wd and
                     maze.map[r][c] != 0b10000 and
@@ -60,26 +52,29 @@ def kruskal_generator(
         if find_root(a, root) != find_root(b, root):
             chosen.append((a, b))
             unit_roots(a, b, root)
-            paint_cell(maze, a[0], a[1], Pixel(trail, '*'))
-            paint_cell(maze, b[0], b[1], Pixel(trail, '*'))
-            paint_wall(maze, a, b, Pixel(trail, '*'))
+            paint_cell(maze, a[0], a[1], Pixel(th.trail, '*'))
+            paint_cell(maze, b[0], b[1], Pixel(th.trail, '*'))
+            paint_wall(maze, a, b, Pixel(th.trail, '*'))
 
     for i in range(len(chosen)):
         a, b = chosen[i]
-        for bit in dirs.keys():
-            if dirs[bit][0] == b[0] - a[0] and dirs[bit][1] == b[1] - a[1]:
+        for bit in th.dirs.keys():
+            if (
+                th.dirs[bit][0] == b[0] - a[0] and
+                th.dirs[bit][1] == b[1] - a[1]
+            ):
                 maze.map[a[0]][a[1]] &= ~bit
-                maze.map[b[0]][b[1]] &= ~dirs[bit][2]
-                paint_cell(maze, a[0], a[1], Pixel(bg, '*'))
-                paint_cell(maze, b[0], b[1], Pixel(bg, '*'))
-                paint_wall(maze, a, b, Pixel(bg, '*'))
+                maze.map[b[0]][b[1]] &= ~th.dirs[bit][2]
+                paint_cell(maze, a[0], a[1], Pixel(th.bg, '*'))
+                paint_cell(maze, b[0], b[1], Pixel(th.bg, '*'))
+                paint_wall(maze, a, b, Pixel(th.bg, '*'))
                 time.sleep(delay)
                 break
 
     if not maze.config.perfect:
-        remove_dead_ends(maze, bg, dirs, delay)
+        remove_dead_ends(maze, th.bg, th.dirs, delay)
 
     start = maze.config.entry
     end = maze.config.exit
-    paint_cell(maze, *start, Pixel(ss, 'S'))
-    paint_cell(maze, *end, Pixel(ee, 'E'))
+    paint_cell(maze, *start, Pixel(th.start, 'S'))
+    paint_cell(maze, *end, Pixel(th.end, 'E'))

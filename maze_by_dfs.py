@@ -1,19 +1,10 @@
-from maze_config_creation import Maze, Pixel
+from maze_config_creation import Maze, Pixel, Theme
 from utils import paint_wall, paint_cell, remove_dead_ends
 import random
 import time
 
 
-def dfs_generator(
-        maze: Maze,
-        bg: tuple[int, int, int],
-        head: tuple[int, int, int],
-        trail: tuple[int, int, int],
-        ss: tuple[int, int, int],
-        ee: tuple[int, int, int],
-        dirs: dict[int, tuple[int, int, int]],
-        delay: float = 0.03
-) -> None:
+def dfs_generator(maze: Maze, th: Theme, delay: float = 0.03) -> None:
 
     random.seed(maze.config.seed)
 
@@ -23,14 +14,14 @@ def dfs_generator(
     done: set[tuple[int, int]] = {maze.config.entry}
     stack: list[tuple[int, int]] = [maze.config.entry]
 
-    paint_cell(maze, *maze.config.entry, Pixel(head, '*'))
+    paint_cell(maze, *maze.config.entry, Pixel(th.head, '*'))
     time.sleep(delay)
 
     while stack:
         r, c = stack[-1]
         neighbors = [
             (bit, r + ir, c + ic, opp)
-            for bit, (ir, ic, opp) in dirs.items() if (
+            for bit, (ir, ic, opp) in th.dirs.items() if (
                 0 <= r + ir < ht and
                 0 <= c + ic < wd and
                 maze.map[r + ir][c + ic] != 0b10000 and
@@ -47,32 +38,32 @@ def dfs_generator(
             stack.append((nr, nc))
 
             # coloring previous cell
-            paint_cell(maze, r, c, Pixel(trail, '*'))
+            paint_cell(maze, r, c, Pixel(th.trail, '*'))
             # coloring wall
-            paint_cell(maze, nr, nc, Pixel(head, '*'))
+            paint_cell(maze, nr, nc, Pixel(th.head, '*'))
             # new head of the stack
             paint_wall(
-                maze, (r, c), (nr, nc), Pixel(trail, '*')
+                maze, (r, c), (nr, nc), Pixel(th.trail, '*')
             )
         else:
             stack.pop()  # backtrack
 
             # this becomes background color
-            paint_cell(maze, r, c, Pixel(bg, '*'))
+            paint_cell(maze, r, c, Pixel(th.bg, '*'))
             if stack:
                 top = stack[-1]
                 # erase the passage back to it
                 paint_wall(
-                    maze, (r, c), top, Pixel(bg, '*')
+                    maze, (r, c), top, Pixel(th.bg, '*')
                 )
                 # head moves back
-                paint_cell(maze, *top, Pixel(head, '*'))
+                paint_cell(maze, *top, Pixel(th.head, '*'))
         time.sleep(delay)
 
     if not maze.config.perfect:
-        remove_dead_ends(maze, bg, dirs, delay)
+        remove_dead_ends(maze, th.bg, th.dirs, delay)
 
     start = maze.config.entry
     end = maze.config.exit
-    paint_cell(maze, *start, Pixel(ss, 'S'))
-    paint_cell(maze, *end, Pixel(ee, 'E'))
+    paint_cell(maze, *start, Pixel(th.start, 'S'))
+    paint_cell(maze, *end, Pixel(th.end, 'E'))

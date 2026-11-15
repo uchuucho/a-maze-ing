@@ -14,6 +14,7 @@ _NDEFOUR = {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (3, 2), (4, 2), (5, 2)}
 _NDETWO = {(0, 4), (0, 5), (1, 5), (2, 5), (3, 4), (4, 4), (5, 4), (5, 5)}
 
 
+
 # === class: errors and rewriting existing error messages ===
 class ConfigError(Exception):
     pass
@@ -291,22 +292,17 @@ class Maze:
             for j in range(self.config.width):
                 s += "0123456789ABCDEFF"[self.map[i][j]]
             s += '\n'
+        s = s + "\n" + f"{self.config.entry[0]},{self.config.entry[1]}\n"
+        s = s + f"{self.config.exit[0]},{self.config.exit[1]}\n"
+        s = s + f"{sol}\n"
         try:
             with open(self.config.output_file, "w", encoding="utf-8") as f:
                 f.write(s)
-                f.write(
-                    f"{self.config.entry[0]},"
-                    f"{self.config.entry[1]}"
-                    "       #entry   (x,y)\n"
-                    f"{self.config.exit[0]},"
-                    f"{self.config.exit[1]}"
-                    "        #exit    (x,y)\n"
-                    f"{sol}"
-                )
-        except Exception:
+        except OSError as e:
             raise ConfigError(
-                f"Impossible to write to the file: {self.config.output_file}"
-            )
+                f"Impossible to write to the file: "
+                f"{self.config.output_file} ({e})"
+            ) from e
 
     # printing maze pixel
     def __print_maze_pixel__(self) -> None:
@@ -317,3 +313,14 @@ class Maze:
             for j in range(step * self.config.width + 1):
                 print(p[i][j].char, end="")
             print()
+
+
+# === class containing directions dict and colors
+@dataclass(frozen=True)
+class Theme:
+    dirs: dict[int, tuple[int, int, int]]
+    bg: tuple[int, int, int]  # background color
+    head: tuple[int, int, int]  # head of queue
+    trail: tuple[int, int, int]  # trail color in queue    
+    start: tuple[int, int, int]  # start=entry color
+    end: tuple[int, int, int]  # end=exit color

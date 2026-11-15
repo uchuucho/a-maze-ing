@@ -1,4 +1,4 @@
-from maze_config_creation import Maze, Pixel
+from maze_config_creation import Maze, Pixel, ConfigError
 import random
 import sys
 import time
@@ -114,7 +114,7 @@ def remove_dead_ends(
     dirs: dict[int, tuple[int, int, int]],
     delay: float = 0.03
 ) -> None:
-
+    
     for r in range(maze.config.height):
         for c in range(maze.config.width):
             if maze.map[r][c] not in [7, 11, 13, 14]:
@@ -144,6 +144,31 @@ def remove_dead_ends(
                 maze, (r, c), (nr, nc), Pixel(bg, '*')
             )
         time.sleep(delay)
+
+    # checking agains 3x3 opening
+    bits = {(ir, ic): (b, o) for b, (ir, ic, o) in dirs.items()}
+    e, w = bits[(0, 1)]
+    s, n = bits[(1, 0)]
+    for r in range(1, maze.config.height - 1):
+        for c in range(1, maze.config.width - 1):
+            block = [
+                (i, j) for i in range(r - 1, r + 2)
+                for j in range(c - 1, c + 2)
+            ]
+            if any(maze.map[i][j] == 0b10000 for i,j in block):
+                continue
+            if all(
+                (j == c + 1 or not maze.map[i][j] & e) and
+                (i == r + 1 or not maze.map[i][j] & s)
+                for i, j in block
+            ):
+                maze.map[r - 1][c] |= s
+                maze.map[r][c] |= n
+                maze.map[r][c - 1] |= e
+                maze.map[r][c] |= w
+                break
+                    
+
 
 
 # finding a shrtest path
@@ -194,6 +219,10 @@ def print_path(
 ) -> str:
 
     path = shortest_path(maze, dirs, delay)
+    if not path:
+        raise ConfigError(
+            "Path creation failed!!!"
+        )
 
     # put shortest path
     solution = ""
