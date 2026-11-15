@@ -6,8 +6,8 @@ VENV   := .venv
 # Use the virtualenv if it exists, otherwise fall back to system python
 PY := $(if $(wildcard $(VENV)/bin/python),$(VENV)/bin/python,python3)
 
-FLAKE_FLAGS := --exclude $(VENV),.git,__pycache__,.mypy_cache
-MYPY_EXCL   := --exclude '^$(VENV)/'
+FLAKE_FLAGS := --exclude $(VENV),.git,__pycache__,.mypy_cache,build
+MYPY_EXCL   := --exclude '^($(VENV)|build)/'
 
 MYPY_FLAGS := --warn-return-any --warn-unused-ignores --ignore-missing-imports \
               --disallow-untyped-defs --check-untyped-defs
@@ -30,6 +30,7 @@ clean:
 	find . -type d -name ".mypy_cache" -prune -exec rm -rf {} +
 	find . -type d -name ".pytest_cache" -prune -exec rm -rf {} +
 	find . -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
+	rm -rf build *.egg-info
 
 lint:
 	$(PY) -m flake8 $(FLAKE_FLAGS) .
