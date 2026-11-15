@@ -81,7 +81,8 @@ class MazeGenerator:
             exit: Exit cell as (row, col).
             perfect: Build a perfect maze if True.
             seed: Seed for reproducible mazes; None gives a random maze.
-            algorithm: Generation algorithm, "dfs" or "prim".
+            algorithm: Generation algorithm: "dfs", "prim", "kruskal"
+                or "hunt_and_kill".
         """
         self.width = width
         self.height = height
@@ -189,7 +190,7 @@ class MazeGenerator:
         and backtracks when stuck, until every reachable cell is visited.
 
         Args:
-        animation_step: Optional function called as animation_step(a, b) after
+            animation_step: Optional function called as animation_step(a, b) after
                 each wall opened between cells a and b (for animation).
         """
         visited: set[Cell] = {self.entry}
@@ -240,6 +241,91 @@ class MazeGenerator:
                 if animation_step:
                     animation_step(cur, nxt)
             in_maze.add(cur)
+
+    def _kruskal(self, animation_step: AnimationStep = None) -> None:
+        """Carve a perfect maze with a randomized Kruskal's algorithm.
+
+        Every cell starts in its own group. Walls between neighbours are
+        taken in random order; a wall is opened only if it joins two
+        different groups, so no loop is ever created.
+
+        Args:
+            animation_step: Optional function called as
+                animation_step(a, b) after each wall opened between
+                cells a and b (for animation).
+        """
+        group: dict[Cell, Cell] = {}
+        walls: list[tuple[Cell, Cell]] = []
+        for r in range(self.height):
+            for c in range(self.width):
+                if (r, c) in self.blocked:
+                    continue
+                group[(r, c)] = (r, c)
+                # east and south only, so each wall is listed once
+                for n in self._neighbours((r, c)):
+                    if n > (r, c):
+                        walls.append(((r, c), n))
+        self.rng.shuffle(walls)
+
+        def find(cell: Cell) -> Cell:
+            """Return the representative of the cell's group."""
+            while group[cell] != cell:
+                cell = group[cell]
+            return cell
+
+        for a, b in walls:
+            root_a, root_b = find(a), find(b)
+            if root_a == root_b:
+                continue  # already connected: opening would make a loop
+            group[root_a] = root_b
+            self._open(a, b)
+            if animation_step:
+                animation_step(a, b)
+
+    def _hunt_and_kill(self, animation_step: AnimationStep = None) -> None:
+        """Carve a perfect maze with the hunt-and-kill algorithm.
+
+        Kill: walk randomly into unvisited cells until stuck.
+        Hunt: scan the grid for an unvisited cell next to a visited one,
+        connect them, and start walking again from there.
+
+        Args:
+            animation_step: Optional function called as
+                animation_step(a, b) after each wall opened between
+                cells a and b (for animation).
+        """
+        visited: set[Cell] = {self.entry}
+        cur: Optional[Cell] = self.entry
+        while cur is not None:
+            # kill: random walk
+            options = [n for n in self._neighbours(cur) if n not in visited]
+            if options:
+                nxt = self.rng.choice(options)
+                self._open(cur, nxt)
+                if animation_step:
+                    animation_step(cur, nxt)
+                visited.add(nxt)
+                cur = nxt
+                continue
+            # hunt: first unvisited cell that touches the visited area
+            cur = None
+            for r in range(self.height):
+                for c in range(self.width):
+                    cell = (r, c)
+                    if cell in visited or cell in self.blocked:
+                        continue
+                    links = [n for n in self._neighbours(cell)
+                             if n in visited]
+                    if links:
+                        nxt = self.rng.choice(links)
+                        self._open(cell, nxt)
+                        if animation_step:
+                            animation_step(cell, nxt)
+                        visited.add(cell)
+                        cur = cell
+                        break
+                if cur is not None:
+                    break
 
     def _is_dead_end(self, cell: Cell) -> bool:
         """Return True if cell is a corridor cell with exactly 3 walls."""
@@ -336,7 +422,12 @@ class MazeGenerator:
         Raises:
             ValueError: If the algorithm name is unknown.
         """
-        algorithms = {"dfs": self._dfs, "prim": self._prim}
+        algorithms = {
+            "dfs": self._dfs,
+            "prim": self._prim,
+            "kruskal": self._kruskal,
+            "hunt_and_kill": self._hunt_and_kill,
+        }
         if self.algorithm not in algorithms:
             raise ValueError(
                 f"unknown algorithm '{self.algorithm}' "

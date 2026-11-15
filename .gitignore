@@ -1,10 +1,11 @@
-folders
-mazegen/
+# folders
 __pycache__/
 .venv/
 .mypy_cache/
 .pytest_cache/
 
+# files
 maze_analyzer.py
 maze.txt
 test_generator.py
+en.subject.pdf
