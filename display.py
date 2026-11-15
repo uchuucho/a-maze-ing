@@ -30,7 +30,7 @@ PALETTE: dict[str, Color] = {
 WALL_COLORS: list[Color] = [
     (98, 92, 128), (140, 140, 150), (70, 110, 150), (130, 80, 110),
 ]
-SOFT = "~"      
+SOFT = "~" 
 SOFTNESS = 0.45  # SOFT and SOFTNESS are used to get the rounded corners
 
 # explosion colors, from first frame to last (white-hot -> fading out)
@@ -51,7 +51,8 @@ class Canvas:
         gen: The generator whose maze is drawn.
         cell_size: Size of a cell in pixels.
         palette: Color of each pixel kind.
-        kinds: Kind of every pixel, row by row (wall, floor, 42, entry, exit, path, head).
+        kinds: Kind of every pixel, row by row ("wall", "floor", "42",
+            "entry", "exit", "path", "head").
     """
 
     def __init__(self, gen: MazeGenerator, cell_size: int = 6) -> None:
@@ -239,6 +240,7 @@ class Canvas:
         sys.stdout.write("".join(self.chars((y, y, x, x)) for y, x in shown))
         sys.stdout.flush()
 
+
 class Animator:
     """Draw the maze while the generator builds it."""
 
@@ -272,6 +274,7 @@ class Animator:
         self.head = b
         time.sleep(self.delay)
 
+
 def generate(canvas: Canvas, animate: bool = True,
              delay: float = 0.06) -> None:
     """Generate a new maze (animated or not), then draw the final state.
@@ -287,6 +290,7 @@ def generate(canvas: Canvas, animate: bool = True,
         canvas.gen.generate()
     canvas.rebuild()
     canvas.draw()
+
 
 def fit_cell_size(width: int, height: int, wanted: int) -> int:
     """Return the largest cell size, up to wanted, that fits the terminal.
@@ -306,6 +310,7 @@ def fit_cell_size(width: int, height: int, wanted: int) -> int:
         if step * width + 1 <= cols and (step * height + 2) // 2 <= lines:
             return size
     return 0
+
 
 def legend(canvas: Canvas) -> str:
     """Return a one-line color legend for the maze.
