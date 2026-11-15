@@ -190,8 +190,9 @@ class MazeGenerator:
         and backtracks when stuck, until every reachable cell is visited.
 
         Args:
-            animation_step: Optional function called as animation_step(a, b) after
-                each wall opened between cells a and b (for animation).
+            animation_step: Optional function called as
+            animation_step(a, b) after each wall opened between
+            cells a and b (for animation).
         """
         visited: set[Cell] = {self.entry}
         stack: list[Cell] = [self.entry]
@@ -480,8 +481,9 @@ class MazeGenerator:
             for a, b in zip(path, path[1:])
         )
         lines.append("")
-        lines.append(f"{self.entry[0]},{self.entry[1]}")
-        lines.append(f"{self.exit[0]},{self.exit[1]}")
+        # entry and exit as x,y (column, row), like maze_analyzer.py
+        lines.append(f"{self.entry[1]},{self.entry[0]}")
+        lines.append(f"{self.exit[1]},{self.exit[0]}")
         lines.append(moves)
         return "\n".join(lines) + "\n"
 
