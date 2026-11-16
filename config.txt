@@ -1,10 +1,10 @@
 # === mandatory ===
-WIDTH=18
-HEIGHT=16
+WIDTH=100
+HEIGHT=50
 # both should be positive
 
 ENTRY=0,1
-EXIT=15,14
+EXIT=10,10
 # both should be in the form 'h,w' (no spaces) for 0<=h<HEIGHT and 0<=w<WIDTH
 
 OUTPUT_FILE=output.txt
@@ -14,10 +14,10 @@ OUTPUT_FILE=output.txt
 
 # === optional ===
 
-PERFECT=0
+PERFECT=1
 # only possible: 'yes/no, Yes/No, True/False, true/false, 1/0, Y/N, y/n'
 
-ALGORITHM=hunt_and_kill
+ALGORITHM=dfs
 # only possible: 'prim', 'dfs', 'kruskal', 'hunt_and_kill'
 
 SEED=42
