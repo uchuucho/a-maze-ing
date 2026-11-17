@@ -83,21 +83,22 @@ def main() -> int:
     """Check the arguments, run, and turn every error into a message."""
     if len(sys.argv) != 2:
         print("Usage: python3 a_maze_ing.py config.txt")
-        return 1
     try:
         run(sys.argv[1])
     except ConfigError as e:
         print(e)
-        return 1
     except ValueError as e:
         print(f"Error: {e}")
-        return 1
     except OSError as e:
         print(f"Error: cannot write output file: {e}")
-        return 1
     except (KeyboardInterrupt, EOFError):
         print()
-    return 0
+    except RuntimeError as e:
+        print(
+            f"Error: terminal size should not change while program runs"
+        )
+    finally:
+        return 0
 
 
 if __name__ == "__main__":

@@ -1,16 +1,14 @@
 # === mandatory ===
-WIDTH=100
-HEIGHT=50
+WIDTH=20
+HEIGHT=30
 # both should be positive
 
 ENTRY=0,1
-EXIT=10,10
+EXIT=12,28
 # both should be in the form 'h,w' (no spaces) for 0<=h<HEIGHT and 0<=w<WIDTH
 
 OUTPUT_FILE=output.txt
 # filename should be nonempty
-
-
 
 # === optional ===
 
