@@ -1,25 +1,18 @@
 # === mandatory ===
+
 WIDTH=20
 HEIGHT=30
-# both should be positive
-
 ENTRY=0,1
 EXIT=12,28
-# both should be in the form 'h,w' (no spaces) for 0<=h<HEIGHT and 0<=w<WIDTH
-
 OUTPUT_FILE=output.txt
-# filename should be nonempty
 
 # === optional ===
 
-PERFECT=1
+PERFECT=yes
 # only possible: 'yes/no, Yes/No, True/False, true/false, 1/0, Y/N, y/n'
 
 ALGORITHM=dfs
 # only possible: 'prim', 'dfs', 'kruskal', 'hunt_and_kill'
 
 SEED=42
-# should be possible
-
 CELL=3
-# size of each cell is CELLxCELL pixels
