@@ -1,3 +1,4 @@
+"""Read and check the maze configuration file (KEY=VALUE per line)."""
 from dataclasses import dataclass
 from pathlib import Path
 import re
@@ -5,17 +6,29 @@ import re
 
 # === constants ====
 ALGORITHMS = {'dfs', 'hunt_and_kill', 'kruskal', 'prim'}
-REQUIRED = {'WIDTH', 'HEIGHT', 'ENTRY', 'EXIT', 'OUTPUT_FILE'}
-KEYWORDS = REQUIRED | {'PERFECT', 'ALGORITHM', 'SEED', 'CELL'}
+REQUIRED = {'WIDTH', 'HEIGHT', 'ENTRY', 'EXIT', 'OUTPUT_FILE', 'PERFECT'}
+KEYWORDS = REQUIRED | {'ALGORITHM', 'SEED', 'CELL'}
 _CFORMAT = re.compile(r"^([A-Z_]+)=(\S+)$")
 
 
 # === class: errors and rewriting existing error messages ===
 class ConfigError(Exception):
-    pass
+    """Raised when the config file is missing, malformed or invalid."""
 
 
 def _to_int(key: str, value: str) -> int:
+    """Convert value to an int.
+
+    Args:
+        key: Config key, used in the error message.
+        value: Text to convert.
+
+    Returns:
+        The integer value.
+
+    Raises:
+        ConfigError: If value is not an integer.
+    """
     try:
         return int(value)
     except ValueError:
@@ -23,6 +36,18 @@ def _to_int(key: str, value: str) -> int:
 
 
 def _to_bool(key: str, value: str) -> bool:
+    """Convert value (yes/no, true/false, 1/0, y/n) to a bool.
+
+    Args:
+        key: Config key, used in the error message.
+        value: Text to convert.
+
+    Returns:
+        True or False.
+
+    Raises:
+        ConfigError: If value is not a known boolean word.
+    """
     if value in ("yes", "Yes", "true", "True", "1", "Y", "y"):
         return True
     if value in ("no", "No", "false", "False", "0", "N", "n"):
@@ -34,7 +59,18 @@ def _to_bool(key: str, value: str) -> bool:
 
 
 def _to_point(key: str, value: str) -> tuple[int, int]:
-    """Read 'x,y' (column, row) and return it as (row, col)."""
+    """Read 'x,y' (column, row) and return it as (row, col).
+
+    Args:
+        key: Config key, used in the error message.
+        value: Text in the form 'x,y'.
+
+    Returns:
+        The point as (row, col).
+
+    Raises:
+        ConfigError: If value is not two integers separated by a comma.
+    """
     coords = value.split(',')
     if len(coords) != 2:
         raise ConfigError(f"{key}: expected 'x,y', got '{value}'")
@@ -46,6 +82,20 @@ def _to_point(key: str, value: str) -> tuple[int, int]:
 # === class: maze configuration ===
 @dataclass(frozen=True)
 class MazeConfig:
+    """Validated maze settings read from the config file.
+
+    Attributes:
+        height: Number of rows.
+        width: Number of columns.
+        entry: Entry cell as (row, col).
+        exit: Exit cell as (row, col).
+        output_file: File where the maze is written.
+        perfect: True for a perfect maze.
+        algorithm: Generation algorithm name.
+        seed: Random seed for reproducible mazes.
+        cell: Cell size in pixels on screen.
+    """
+
     height: int
     width: int
     entry: tuple[int, int]
@@ -58,7 +108,12 @@ class MazeConfig:
 
     # automatic check after initialization
     def __post_init__(self) -> None:
-        errors = []
+        """Check every value and report all problems at once.
+
+        Raises:
+            ConfigError: If one or more values are invalid.
+        """
+        errors: list[str] = []
 
         if self.height < 1:
             errors.append(f"HEIGHT must be >= 1, but got {self.height}")
@@ -86,6 +141,20 @@ class MazeConfig:
     # reading key=value pairs from config file
     @staticmethod
     def _read_pairs(path: Path) -> dict[str, str]:
+        """Read the file and return its KEY=value pairs.
+
+        Empty lines and lines starting with '#' are skipped.
+
+        Args:
+            path: Path of the config file.
+
+        Returns:
+            A dict from key to its raw text value.
+
+        Raises:
+            ConfigError: If the file cannot be read, a line is malformed
+                or a key appears twice.
+        """
         try:
             content = path.read_text(encoding="utf-8")
         except FileNotFoundError:
@@ -122,6 +191,17 @@ class MazeConfig:
     # creation of config class
     @classmethod
     def create_maze_config(cls, path: str | Path) -> "MazeConfig":
+        """Read, convert and check the config file.
+
+        Args:
+            path: Path of the config file.
+
+        Returns:
+            The validated MazeConfig.
+
+        Raises:
+            ConfigError: If a key is missing or unknown, or a value is invalid.
+        """
         dct = cls._read_pairs(Path(path))
 
         missing = REQUIRED - dct.keys()
@@ -141,10 +221,7 @@ class MazeConfig:
             entry=_to_point('ENTRY', dct['ENTRY']),
             exit=_to_point('EXIT', dct['EXIT']),
             output_file=dct['OUTPUT_FILE'],
-            perfect=(
-                _to_bool('PERFECT', dct['PERFECT'])
-                if 'PERFECT' in dct else False
-            ),
+            perfect=_to_bool('PERFECT', dct['PERFECT']),
             seed=_to_int('SEED', dct['SEED']) if 'SEED' in dct else 42,
             cell=_to_int('CELL', dct['CELL']) if 'CELL' in dct else 3,
             algorithm=dct['ALGORITHM'] if 'ALGORITHM' in dct else 'dfs'
