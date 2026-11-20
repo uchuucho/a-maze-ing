@@ -27,15 +27,16 @@ def show_menu(canvas: Canvas) -> None:
 def run(path: str) -> None:
     """Load the config, generate and save the maze, then run the menu."""
     cfg = MazeConfig.create_maze_config(path)
+    # check the size first, so a huge maze is never built in memory
+    size = fit_cell_size(cfg.width, cfg.height, cfg.cell)
+    if size == 0:
+        raise ValueError("terminal too small for this maze: "
+                         "enlarge the window or zoom out")
     gen = MazeGenerator(
         cfg.width, cfg.height, cfg.entry, cfg.exit,
         perfect=cfg.perfect, seed=cfg.seed,
         algorithm=cfg.algorithm or "dfs",
     )
-    size = fit_cell_size(cfg.width, cfg.height, cfg.cell)
-    if size == 0:
-        raise ValueError("terminal too small for this maze: "
-                         "enlarge the window or zoom out")
     canvas = Canvas(gen, size)
     # about 10 seconds of animation whatever the maze size
     delay = min(0.06, 10 / (cfg.width * cfg.height))

@@ -305,7 +305,7 @@ def fit_cell_size(width: int, height: int, wanted: int) -> int:
     """
     cols, lines = shutil.get_terminal_size()
     lines -= 4  # keep room for the legend and menu under the maze
-    for size in range(wanted, 0, -1):
+    for size in range(min(wanted, cols), 0, -1):
         step = size + 1
         if step * width + 1 <= cols and (step * height + 2) // 2 <= lines:
             return size
