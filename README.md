@@ -62,7 +62,7 @@ One `KEY=value` per line, no spaces. Lines starting with `#` are comments.
 | `ENTRY` | yes | entry cell as `x,y` (column,row) | `ENTRY=0,0` |
 | `EXIT` | yes | exit cell as `x,y` (column,row) | `EXIT=19,14` |
 | `OUTPUT_FILE` | yes | file where the maze is written | `OUTPUT_FILE=maze.txt` |
-| `PERFECT` | no | `1/0`, `yes/no`, `true/false`, `y/n` (default `0`) | `PERFECT=1` |
+| `PERFECT` | yes | `True/False`, `1/0`, `yes/no`, `y/n` | `PERFECT=True` |
 | `ALGORITHM` | no | `dfs`, `prim`, `kruskal`, `hunt_and_kill` (default `dfs`) | `ALGORITHM=prim` |
 | `SEED` | no | integer >= 0, same seed = same maze (default `42`) | `SEED=7` |
 | `CELL` | no | cell size in pixels on screen (default `3`) | `CELL=6` |
@@ -141,7 +141,7 @@ called after each wall opened between cells `a` and `b`.
 | Member | Parts |
 |--------|-------|
 | shkholma | Config file parsing and validation, the original generation algorithms (DFS, Prim, Kruskal, hunt-and-kill), "42" pattern placement, first terminal renderer and animations, Makefile |
-| alehiany | Reusable `mazegen` package (`MazeGenerator` class), new display and main program, packaging (`pyproject.toml`, wheel), LICENSE, README |
+| alehiany | Reusable `mazegen` package (`MazeGenerator` class), new display and main program, packaging (`pyproject.toml`, wheel), LICENSE.md, README |
 
 ### Planning and how it evolved
 
@@ -180,7 +180,7 @@ provided `maze_analyzer.py`, and Claude (AI assistant, see below).
 
 AI was used as an assistant for:
 - **Explanations:** walking through the subject, the existing code, bit
-  operations, the algorithms and terminal rendering assistance.
+  operations, the algorithms and terminal rendering.
 - **Restructuring:** guidance on moving the algorithms into the reusable
   `MazeGenerator` class and on the display design (colors, rounded tiles,
   thin path line, animation).
