@@ -103,7 +103,7 @@ class MazeConfig:
     output_file: str
     perfect: bool = False
     algorithm: str | None = 'dfs'
-    seed: int | None = 42
+    seed: int | None = None
     cell: int = 3
 
     # automatic check after initialization
@@ -222,7 +222,7 @@ class MazeConfig:
             exit=_to_point('EXIT', dct['EXIT']),
             output_file=dct['OUTPUT_FILE'],
             perfect=_to_bool('PERFECT', dct['PERFECT']),
-            seed=_to_int('SEED', dct['SEED']) if 'SEED' in dct else 42,
+            seed=_to_int('SEED', dct['SEED']) if 'SEED' in dct else None,
             cell=_to_int('CELL', dct['CELL']) if 'CELL' in dct else 3,
             algorithm=dct['ALGORITHM'] if 'ALGORITHM' in dct else 'dfs'
         )

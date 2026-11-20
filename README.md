@@ -64,7 +64,7 @@ One `KEY=value` per line, no spaces. Lines starting with `#` are comments.
 | `OUTPUT_FILE` | yes | file where the maze is written | `OUTPUT_FILE=maze.txt` |
 | `PERFECT` | yes | `True/False`, `1/0`, `yes/no`, `y/n` | `PERFECT=True` |
 | `ALGORITHM` | no | `dfs`, `prim`, `kruskal`, `hunt_and_kill` (default `dfs`) | `ALGORITHM=prim` |
-| `SEED` | no | integer >= 0, same seed = same maze (default `42`) | `SEED=7` |
+| `SEED` | no | integer >= 0, same seed = same maze (default `random`) | `SEED=7` |
 | `CELL` | no | cell size in pixels on screen (default `3`) | `CELL=6` |
 
 Example:
