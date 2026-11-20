@@ -20,7 +20,7 @@ install:
 	$(VENV)/bin/python -m pip install flake8 mypy
 
 run:
-	$(PY) $(MAIN) $(CONFIG)
+	$(PY) $(MAIN) $(CONFIG) || true
 
 debug:
 	$(PY) -m pdb $(MAIN) $(CONFIG)
