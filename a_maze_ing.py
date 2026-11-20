@@ -44,8 +44,11 @@ def run(path: str) -> None:
     try:
         def redraw(signum: int, frame: object) -> None:
             """Redraw everything when the terminal window is resized."""
-            canvas.draw()
-            show_menu(canvas)
+            try:
+                canvas.draw()
+                show_menu(canvas)
+            except RuntimeError:
+                pass  # resized mid-drawing: skip, the next draw fixes it
 
         signal.signal(signal.SIGWINCH, redraw)
 
@@ -83,22 +86,21 @@ def main() -> int:
     """Check the arguments, run, and turn every error into a message."""
     if len(sys.argv) != 2:
         print("Usage: python3 a_maze_ing.py config.txt")
+        return 1
     try:
         run(sys.argv[1])
     except ConfigError as e:
         print(e)
+        return 1
     except ValueError as e:
         print(f"Error: {e}")
+        return 1
     except OSError as e:
         print(f"Error: cannot write output file: {e}")
+        return 1
     except (KeyboardInterrupt, EOFError):
         print()
-    except RuntimeError as e:
-        print(
-            f"Error: terminal size should not change while program runs"
-        )
-    finally:
-        return 0
+    return 0
 
 
 if __name__ == "__main__":
