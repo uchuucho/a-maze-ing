@@ -5,14 +5,12 @@ HEIGHT=30
 ENTRY=0,1
 EXIT=12,28
 OUTPUT_FILE=output.txt
+# only possible: 'yes/no, Yes/No, True/False, true/false, 1/0, Y/N, y/n'
+PERFECT=yes
 
 # === optional ===
-
-PERFECT=yes
-# only possible: 'yes/no, Yes/No, True/False, true/false, 1/0, Y/N, y/n'
-
-ALGORITHM=dfs
 # only possible: 'prim', 'dfs', 'kruskal', 'hunt_and_kill'
+ALGORITHM=dfs
 
-SEED=42
+#SEED=42
 CELL=3
