@@ -9,6 +9,9 @@ description = "Reusable maze generator (A-Maze-ing, 42)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-
+authors = [
+  { name = "shkholma" },
+  { name = "alehiany" },
+]
 [tool.setuptools]
 packages = ["mazegen"]
