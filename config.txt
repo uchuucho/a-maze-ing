@@ -1,9 +1,8 @@
 # === mandatory ===
-
-WIDTH=20
-HEIGHT=30
+WIDTH=60
+HEIGHT=35
 ENTRY=0,1
-EXIT=12,28
+EXIT=15,25
 OUTPUT_FILE=output.txt
 # only possible: 'yes/no, Yes/No, True/False, true/false, 1/0, Y/N, y/n'
 PERFECT=yes
@@ -13,4 +12,4 @@ PERFECT=yes
 ALGORITHM=dfs
 
 #SEED=42
-CELL=3
+CELL=6

@@ -223,6 +223,6 @@ class MazeConfig:
             output_file=dct['OUTPUT_FILE'],
             perfect=_to_bool('PERFECT', dct['PERFECT']),
             seed=_to_int('SEED', dct['SEED']) if 'SEED' in dct else None,
-            cell=_to_int('CELL', dct['CELL']) if 'CELL' in dct else 3,
+            cell=_to_int('CELL', dct['CELL']) if 'CELL' in dct else 6,
             algorithm=dct['ALGORITHM'] if 'ALGORITHM' in dct else 'dfs'
         )
