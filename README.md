@@ -2,6 +2,8 @@
 
 # A-Maze-ing
 
+![A-Maze-ing demo](demo.gif)
+
 ## Description
 
 A-Maze-ing reads a configuration file, generates a maze, writes it to an
